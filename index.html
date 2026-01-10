@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vannamei Data - Gestión Acuícola</title>
+    <style>
+        /* Estilos Generales - Look Profesional y Limpio */
+        :root {
+            --primary-color: #006064; /* Cyan oscuro - Tema Acuicultura */
+            --secondary-color: #0097a7;
+            --bg-color: #f4f6f8;
+            --text-color: #333;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        /* Contenedor Principal */
+        .app-container {
+            width: 100%;
+            max-width: 480px; /* Diseño tipo móvil/app */
+            background: var(--white);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Utilidad para ocultar pantallas */
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Pantalla de Login --- */
+        #login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
+        }
+
+        /* Botón del Ojo */
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        button.primary-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button.primary-btn:hover {
+            background-color: #e0f7fa;
+        }
+
+        /* --- Panel de Control y Pantallas Internas --- */
+        .screen-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        .content-area {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Grid de Botones del Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .dash-btn {
+            background-color: var(--white);
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .dash-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--secondary-color);
+        }
+
+        /* Mensaje de error */
+        #login-error {
+            color: #ffcdd2;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <section id="login-screen">
+        <h2>Vannamei Data</h2>
+        <p style="text-align: center; opacity: 0.9;">Gestión Productiva</p>
+        
+        <form id="login-form">
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Usuario (Email)" required autocomplete="username" value="vannameidata@gmail.com">
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
+                <button type="button" class="toggle-password" id="toggle-pwd-btn" title="Mostrar contraseña">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+
+            <button type="submit" class="primary-btn">INGRESAR</button>
+            <div id="login-error" class="hidden">Credenciales incorrectas</div>
+        </form>
+    </section>
+
+    <section id="dashboard-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.logout()">&#8592;</button>
+            <h3>Panel de Control</h3>
+        </div>
+        <div class="content-area">
+            <p>Bienvenido, Administrador.</p>
+            <div class="dashboard-grid">
+                <button class="dash-btn" onclick="navigation.goTo('config-piscinas')">Configuración de Piscinas</button>
+                <button class="dash-btn" onclick="navigation.goTo('registro-alimentacion')">Registro de Alimentación</button>
+                <button class="dash-btn" onclick="navigation.goTo('calidad-agua')">Calidad de Agua</button>
+                <button class="dash-btn" onclick="navigation.goTo('biometrias')">Biometrías</button>
+                <button class="dash-btn" onclick="navigation.goTo('estatus-piscinas')">Estatus de Piscinas</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="generic-page" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3 id="page-title">Título Página</h3>
+        </div>
+        <div class="content-area">
+            <p>Contenido de la sección: <span id="page-content-name" style="font-weight:bold;"></span></p>
+            <p><em>(Formulario en construcción...)</em></p>
+        </div>
+    </section>
+
+</div>
+
+<script type="module">
+    // --- 1. CONFIGURACIÓN DE FIREBASE ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBgvzjBdgvSlHiIqyGL3abcG6fHFS-m6I",
+      authDomain: "vannamei--data.firebaseapp.com",
+      projectId: "vannamei--data",
+      storageBucket: "vannamei--data.firebasestorage.app",
+      messagingSenderId: "758235885282",
+      appId: "1:758235885282:web:a7ad387667a05a1f7778bb",
+      measurementId: "G-MN2YM6T1LE"
+    };
+
+    // Inicializar Firebase (Conectado pero no usado para Auth en este paso por requerimiento específico)
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    console.log("Firebase inicializado correctamente");
+
+
+    // --- 2. LÓGICA DE LA APLICACIÓN ---
+    
+    // Credenciales Hardcodeadas (Según requerimiento)
+    const VALID_USER = "vannameidata@gmail.com";
+    const VALID_PASS = "Majagual*2026"; // Nota: Mayúsculas importan
+
+    // Referencias al DOM
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passInput = document.getElementById('password');
+    const loginError = document.getElementById('login-error');
+    const togglePwdBtn = document.getElementById('toggle-pwd-btn');
+    
+    // Sistema de Navegación Simple
+    window.navigation = {
+        history: [], // Pila para guardar historial si fuera necesario
+        
+        // Función para cambiar de pantalla
+        showScreen: (screenId) => {
+            // Ocultar todas las secciones directas de app-container
+            document.querySelectorAll('.app-container > section').forEach(el => el.classList.add('hidden'));
+            // Mostrar la deseada
+            document.getElementById(screenId).classList.remove('hidden');
+        },
+
+        goTo: (pageName) => {
+            // Lógica para mostrar las sub-páginas
+            // Por ahora usamos una página genérica y cambiamos el título
+            const titleMap = {
+                'config-piscinas': 'Configuración de Piscinas',
+                'registro-alimentacion': 'Registro de Alimentación',
+                'calidad-agua': 'Calidad de Agua',
+                'biometrias': 'Biometrías',
+                'estatus-piscinas': 'Estatus de Piscinas'
+            };
+
+            document.getElementById('page-title').innerText = titleMap[pageName] || 'Página';
+            document.getElementById('page-content-name').innerText = titleMap[pageName];
+            
+            // Navegar
+            window.navigation.showScreen('generic-page');
+        },
+
+        goBack: () => {
+            // Regresar al Dashboard desde cualquier sub-página
+            window.navigation.showScreen('dashboard-screen');
+        },
+
+        logout: () => {
+            // Regresar al Login y limpiar campos
+            passInput.value = "";
+            window.navigation.showScreen('login-screen');
+        }
+    };
+
+    // --- 3. EVENT LISTENERS ---
+
+    // Toggle Mostrar/Ocultar Contraseña
+    togglePwdBtn.addEventListener('click', () => {
+        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passInput.setAttribute('type', type);
+        
+        // Cambiar icono visualmente (opcional, aquí solo cambia opacidad para feedback)
+        togglePwdBtn.style.opacity = type === 'text' ? '1' : '0.6';
+    });
+
+    // Manejo del Submit del Login
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault(); // Evitar recarga de página
+        
+        const user = emailInput.value.toLowerCase(); // Normalizar email
+        const pass = passInput.value;
+
+        if (user === VALID_USER && pass === VALID_PASS) {
+            loginError.classList.add('hidden');
+            window.navigation.showScreen('dashboard-screen');
+        } else {
+            loginError.classList.remove('hidden');
+            // Efecto visual de error
+            loginForm.classList.add('shake');
+            setTimeout(() => loginForm.classList.remove('shake'), 500);
+        }
+    });
+
+</script>
+</body>
+</html>
