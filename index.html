@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vannamei Data - Gestión Acuícola</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         /* --- ESTILOS (CSS) --- */
         :root { --primary-color: #006064; --secondary-color: #0097a7; --bg-color: #f4f6f8; --text-color: #333; --white: #ffffff; --alarm-color: #d32f2f; }
@@ -39,16 +41,22 @@
         .pool-input-row label { margin: 0; font-weight: normal; }
         .pool-input-row input { width: 80px; text-align: center; }
         
-        /* Sección Química (Acordeón visual) */
         .chemistry-section { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; margin-top: 15px; background-color: #fafafa; }
         .chemistry-title { font-weight: bold; color: var(--primary-color); margin-bottom: 10px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
 
-        #login-error { color: #ffcdd2; text-align: center; margin-top: 10px; font-size: 0.9rem; }
+        /* TABLA DE BIOMETRÍAS */
+        .bio-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; }
+        .bio-table th { background: var(--primary-color); color: white; padding: 8px; text-align: left; }
+        .bio-table td { border-bottom: 1px solid #ddd; padding: 8px; }
+        .bio-table tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* --- ESTILOS DE LA ALARMA --- */
+        /* GRÁFICO */
+        .chart-container { margin-top: 20px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; height: 250px; }
+
+        /* ALARMA */
         #alarm-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(211, 47, 47, 0.95); /* Rojo fuerte */
+            background-color: rgba(211, 47, 47, 0.95);
             z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: white; text-align: center; padding: 20px;
@@ -60,6 +68,7 @@
         .alarm-box h2 { color: var(--alarm-color); margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
         .alarm-data { font-size: 1.1rem; margin: 10px 0; line-height: 1.6; }
         .alarm-btn { background-color: var(--alarm-color); color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 5px; cursor: pointer; margin-top: 15px; width: 100%; font-weight: bold; }
+        #login-error { color: #ffcdd2; text-align: center; margin-top: 10px; font-size: 0.9rem; }
 
     </style>
 </head>
@@ -98,8 +107,8 @@
                 <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
                 <button class="dash-btn" onclick="navigation.showScreen('feeding-screen'); loadPoolsForSelect('feed-pool-select');">Registro de Alimentación</button>
                 <button class="dash-btn" onclick="navigation.showScreen('water-screen'); loadPoolsForSelect('water-pool-select');">Calidad de Agua</button>
+                <button class="dash-btn" onclick="navigation.showScreen('bio-screen'); loadPoolsForSelect('bio-pool-select');">Biometrías</button>
                 
-                <button class="dash-btn" onclick="navigation.goToGeneric('Biometrías')">Biometrías</button>
                 <button class="dash-btn" onclick="navigation.goToGeneric('Estatus de Piscinas')">Estatus de Piscinas</button>
             </div>
         </div>
@@ -112,14 +121,8 @@
         </div>
         <div class="content-area">
             <form id="config-form">
-                <div class="input-group">
-                    <label>Nombre de la Granja</label>
-                    <input type="text" id="farm-name" placeholder="Ej: Santa Clara" required>
-                </div>
-                <div class="input-group">
-                    <label>Cantidad de Piscinas</label>
-                    <input type="number" id="pool-count" placeholder="0" min="1" max="50" oninput="renderPoolInputs(this.value)">
-                </div>
+                <div class="input-group"><label>Nombre de la Granja</label><input type="text" id="farm-name" placeholder="Ej: Santa Clara" required></div>
+                <div class="input-group"><label>Cantidad de Piscinas</label><input type="number" id="pool-count" placeholder="0" min="1" max="50" oninput="renderPoolInputs(this.value)"></div>
                 <div style="border-top: 1px solid #eee; margin: 20px 0;"></div>
                 <div id="pool-areas-container"></div>
                 <button type="button" onclick="saveConfig()" class="primary-btn" style="margin-top: 20px;">GUARDAR</button>
@@ -160,6 +163,8 @@
                         <label>Oxígeno (mg/L) <span style="color:red; font-size:0.8em;">*Alarma si &le; 3</span></label>
                         <input type="number" id="water-o2" placeholder="Ej: 4.5" step="0.01" required style="border: 2px solid #0288d1;">
                     </div>
+                    <div class="input-group"><label>Disco Secchi (cm)</label><input type="number" id="water-secchi" placeholder="Ej: 35" step="1"></div>
+                    
                     <div class="input-group"><label>Temperatura (°C)</label><input type="number" id="water-temp" placeholder="Ej: 27.5" step="0.1"></div>
                     <div class="input-group"><label>pH</label><input type="number" id="water-ph" placeholder="Ej: 7.8" step="0.01"></div>
                     <div class="input-group"><label>Salinidad (ppt)</label><input type="number" id="water-sal" placeholder="Ej: 15" step="0.1"></div>
@@ -171,15 +176,81 @@
                     <div class="input-group"><label>NO2 (Nitritos mg/L)</label><input type="number" id="water-no2" step="0.001"></div>
                     <div class="input-group"><label>Alcalinidad (mg/L CaCO3)</label><input type="number" id="water-alk" step="1"></div>
                     <div class="input-group"><label>Dureza (mg/L CaCO3)</label><input type="number" id="water-hard" step="1"></div>
-                    <div class="dashboard-grid">
-                        <div class="input-group"><label>Magnesio</label><input type="number" id="water-mg" step="1"></div>
-                        <div class="input-group"><label>Potasio</label><input type="number" id="water-k" step="1"></div>
-                    </div>
+                    <div class="input-group"><label>Magnesio</label><input type="number" id="water-mg" step="1"></div>
+                    <div class="input-group"><label>Potasio</label><input type="number" id="water-k" step="1"></div>
                     <div class="input-group"><label>Fosfatos (PO4)</label><input type="number" id="water-po4" step="0.01"></div>
                 </div>
-
                 <button type="button" onclick="saveWaterQuality()" class="primary-btn" style="margin-top: 15px;">GUARDAR PARÁMETROS</button>
             </form>
+        </div>
+    </section>
+
+    <section id="bio-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Biometrías</h3>
+        </div>
+        <div class="content-area">
+            
+            <div class="input-group">
+                <label>Piscina Activa</label>
+                <select id="bio-pool-select" onchange="loadBioData(this.value)">
+                    <option value="">Seleccione Piscina...</option>
+                </select>
+            </div>
+
+            <form id="bio-form" style="background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <h4 style="margin-top:0; color:var(--primary-color);">Añadir Registro</h4>
+                
+                <div class="input-group">
+                    <label>Tipo de Registro</label>
+                    <select id="bio-type" required>
+                        <option value="Biometría">Biometría (Muestreo)</option>
+                        <option value="Siembra">Siembra (Inicio Ciclo)</option>
+                        <option value="Cosecha">Cosecha (Fin Ciclo)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Fecha</label>
+                    <input type="date" id="bio-date" required>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="input-group">
+                        <label>Camarones Vivos (Und)</label>
+                        <input type="number" id="bio-count" placeholder="Cant." required>
+                    </div>
+                    <div class="input-group">
+                        <label>Peso Promedio (g)</label>
+                        <input type="number" id="bio-weight" placeholder="Gramos" step="0.01" required>
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveBiometry()" class="primary-btn">AÑADIR REGISTRO</button>
+            </form>
+
+            <h4 style="margin-top:30px; margin-bottom:5px;">Gráfico de Crecimiento</h4>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+
+            <h4 style="margin-top:30px; margin-bottom:5px;">Historial del Ciclo</h4>
+            <table class="bio-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Peso(g)</th>
+                        <th>Bio(Kg)</th>
+                        <th>Surv(%)</th>
+                    </tr>
+                </thead>
+                <tbody id="bio-table-body">
+                    <tr><td colspan="5" style="text-align:center;">Seleccione una piscina</td></tr>
+                </tbody>
+            </table>
+
         </div>
     </section>
 
@@ -210,7 +281,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, orderBy, getDocs, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -227,16 +298,16 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- ID DE SESIÓN (Para que la alarma no suene en el propio dispositivo) ---
+    // Variables Globales
     const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    console.log("ID de Sesión actual:", SESSION_ID);
+    let growthChartInstance = null; // Para guardar la instancia del gráfico
 
     // Fechas por defecto
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('feed-date').value = today;
     document.getElementById('water-date').value = today;
-    const now = new Date().toTimeString().split(' ')[0].substring(0,5);
-    document.getElementById('water-time').value = now;
+    document.getElementById('bio-date').value = today;
+    document.getElementById('water-time').value = new Date().toTimeString().substring(0,5);
 
     // --- NAVEGACIÓN ---
     window.navigation = {
@@ -270,7 +341,6 @@
             const cred = await signInWithEmailAndPassword(auth, email, pass);
             document.getElementById('user-display').innerText = cred.user.email;
             window.navigation.showScreen('dashboard-screen');
-            // Al entrar, iniciamos la escucha de alarmas
             startAlarmListener(); 
         } catch (error) {
             err.innerText = "Error: Credenciales incorrectas."; err.classList.remove('hidden');
@@ -279,9 +349,12 @@
         }
     });
 
-    // --- HELPERS (Carga de piscinas genérica) ---
+    // --- HELPERS ---
     window.loadPoolsForSelect = async (selectId) => {
         const select = document.getElementById(selectId);
+        // No recargar si ya tiene opciones (excepto la de carga)
+        if(select.options.length > 2) return; 
+        
         select.innerHTML = '<option value="">Cargando...</option>';
         try {
             const snap = await getDoc(doc(db, "config", "general"));
@@ -297,14 +370,14 @@
         } catch (e) { select.innerHTML = '<option value="">Error carga</option>'; }
     };
 
-    // --- GUARDAR CONFIG ---
+    // --- CONFIG ---
     window.renderPoolInputs = (val) => {
         const c = document.getElementById('pool-areas-container'); c.innerHTML = '';
         const count = parseInt(val);
         if(!count) return;
         for(let i=1; i<=count; i++) c.innerHTML += `<div class="pool-input-row"><label>Piscina ${i}</label><input type="number" class="pool-area-input" data-id="${i}" placeholder="Has"></div>`;
     };
-    window.saveConfig = async () => { /* (Igual que antes, omitido por brevedad pero funcional en copia completa) */ 
+    window.saveConfig = async () => {
         if (!auth.currentUser) return;
         const name = document.getElementById('farm-name').value;
         const count = document.getElementById('pool-count').value;
@@ -314,7 +387,7 @@
         await setDoc(doc(db, "config", "general"), { farmName: name, poolCount: parseInt(count), pools, updatedBy: auth.currentUser.email });
         alert("Configuración guardada"); window.navigation.goBack();
     };
-    window.loadConfig = async () => { /* Lógica de carga igual a versiones previas */ 
+    window.loadConfig = async () => {
          try {
             const snap = await getDoc(doc(db, "config", "general"));
             if (snap.exists()) {
@@ -337,25 +410,21 @@
         const cons = document.getElementById('feed-consumed').value;
         if(!date || !pool) return alert("Faltan datos");
         await addDoc(collection(db, "feeding_records"), { date, poolId: pool, recharged: parseFloat(rec)||0, consumed: parseFloat(cons)||0, user: auth.currentUser.email });
-        alert("Alimentación registrada");
-        document.getElementById('feed-consumed').value = "";
+        alert("Alimentación registrada"); document.getElementById('feed-consumed').value = "";
     };
 
-    // --- CALIDAD DE AGUA Y ALARMAS (NUEVO) ---
+    // --- CALIDAD DE AGUA ---
     window.saveWaterQuality = async () => {
         if (!auth.currentUser) return alert("Sesión finalizada");
-
-        // 1. Recolección de Datos
         const data = {
             date: document.getElementById('water-date').value,
             time: document.getElementById('water-time').value,
             poolId: document.getElementById('water-pool-select').value,
-            // Físicos
             oxygen: parseFloat(document.getElementById('water-o2').value) || 0,
+            secchi: parseFloat(document.getElementById('water-secchi').value) || 0, // NUEVO
             temp: parseFloat(document.getElementById('water-temp').value) || 0,
             ph: parseFloat(document.getElementById('water-ph').value) || 0,
             salinity: parseFloat(document.getElementById('water-sal').value) || 0,
-            // Químicos
             tan: parseFloat(document.getElementById('water-tan').value) || 0,
             no2: parseFloat(document.getElementById('water-no2').value) || 0,
             alk: parseFloat(document.getElementById('water-alk').value) || 0,
@@ -363,73 +432,157 @@
             mg: parseFloat(document.getElementById('water-mg').value) || 0,
             k: parseFloat(document.getElementById('water-k').value) || 0,
             po4: parseFloat(document.getElementById('water-po4').value) || 0,
-            
             user: auth.currentUser.email,
             timestamp: new Date()
         };
 
-        if(!data.date || !data.poolId || !document.getElementById('water-o2').value) {
-            return alert("Fecha, Piscina y OXÍGENO son obligatorios.");
-        }
-
-        const btn = document.querySelector('#water-screen button.primary-btn');
-        btn.innerText = "Guardando..."; btn.disabled = true;
+        if(!data.date || !data.poolId || !document.getElementById('water-o2').value) return alert("Faltan datos obligatorios (Oxígeno)");
 
         try {
-            // 2. Guardar registro normal
             await addDoc(collection(db, "water_quality"), data);
-
-            // 3. VERIFICAR ALARMA (Oxígeno <= 3)
             if (data.oxygen <= 3.0) {
-                console.warn("ALERTA: Oxígeno bajo. Enviando alarma...");
-                await addDoc(collection(db, "active_alarms"), {
-                    type: "LOW_OXYGEN",
-                    poolId: data.poolId,
-                    value: data.oxygen,
-                    temp: data.temp,
-                    date: data.date,
-                    time: data.time,
-                    timestamp: new Date(), // Importante para ordenar
-                    originSessionId: SESSION_ID // MI CÉDULA DE IDENTIDAD DIGITAL
-                });
+                await addDoc(collection(db, "active_alarms"), { type: "LOW_OXYGEN", poolId: data.poolId, value: data.oxygen, temp: data.temp, date: data.date, time: data.time, timestamp: new Date(), originSessionId: SESSION_ID });
             }
-
-            alert("Datos de agua guardados correctamente.");
-            window.navigation.goBack();
-        } catch (e) {
-            alert("Error: " + e.message);
-        } finally {
-            btn.innerText = "GUARDAR PARÁMETROS"; btn.disabled = false;
-        }
+            alert("Guardado"); window.navigation.goBack();
+        } catch (e) { alert("Error: " + e.message); }
     };
 
-    // --- ESCUCHA DE ALARMAS (El Oído Digital) ---
-    let unsubscribeAlarm = null;
+    // --- BIOMETRÍAS Y GRÁFICOS (Lógica Completa) ---
+    
+    // Guardar Biometría
+    window.saveBiometry = async () => {
+        if (!auth.currentUser) return;
+        const poolId = document.getElementById('bio-pool-select').value;
+        const type = document.getElementById('bio-type').value;
+        const date = document.getElementById('bio-date').value;
+        const count = parseFloat(document.getElementById('bio-count').value);
+        const weight = parseFloat(document.getElementById('bio-weight').value);
 
-    function startAlarmListener() {
-        if(unsubscribeAlarm) return; // Ya escuchando
+        if(!poolId || !date || !count || !weight) return alert("Complete todos los campos");
 
-        const q = query(collection(db, "active_alarms"), orderBy("timestamp", "desc"), limit(1));
+        try {
+            await addDoc(collection(db, "biometrics"), {
+                poolId, type, date, count, weight,
+                timestamp: new Date(),
+                user: auth.currentUser.email
+            });
+            alert("Registro añadido");
+            loadBioData(poolId); // Recargar tabla y gráfico
+        } catch(e) { alert("Error: " + e.message); }
+    };
+
+    // Cargar Datos, Calcular Supervivencia y Dibujar Gráfico
+    window.loadBioData = async (poolId) => {
+        if(!poolId) return;
+        const tbody = document.getElementById('bio-table-body');
+        tbody.innerHTML = '<tr><td colspan="5">Cargando datos...</td></tr>';
+
+        // 1. Obtener todos los registros de esta piscina ordenados por fecha
+        const q = query(collection(db, "biometrics"), where("poolId", "==", poolId), orderBy("date", "asc"));
+        const querySnapshot = await getDocs(q);
         
+        let records = [];
+        querySnapshot.forEach(doc => records.push(doc.data()));
+
+        // 2. Procesar lógica de Ciclos (Encontrar la última "Siembra")
+        let currentCycleStart = null;
+        let cycleRecords = [];
+
+        // Buscamos la siembra más reciente para definir el ciclo actual
+        // Recorremos al revés para encontrar la última siembra
+        for (let i = records.length - 1; i >= 0; i--) {
+            if (records[i].type === 'Siembra') {
+                // Filtramos solo los registros desde esta fecha en adelante
+                cycleRecords = records.filter(r => r.date >= records[i].date);
+                currentCycleStart = records[i];
+                break;
+            }
+        }
+
+        // Si no hay siembra, mostramos todo lo que haya sin cálculos de supervivencia precisos
+        if (!currentCycleStart && records.length > 0) cycleRecords = records;
+
+        // 3. Renderizar Tabla y preparar datos Gráfico
+        tbody.innerHTML = '';
+        let labels = []; // Fechas para X
+        let dataPoints = []; // Pesos para Y
+
+        if(cycleRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sin registros para esta piscina</td></tr>';
+        } else {
+            cycleRecords.forEach(rec => {
+                // Cálculos
+                const biomass = ((rec.count * rec.weight) / 1000).toFixed(2);
+                let survival = "--";
+                
+                if (currentCycleStart) {
+                    const survPct = (rec.count / currentCycleStart.count) * 100;
+                    survival = survPct.toFixed(1) + "%";
+                }
+
+                // Fila Tabla
+                const row = `<tr>
+                    <td>${rec.date.substring(5)}</td>
+                    <td>${rec.type}</td>
+                    <td>${rec.weight}</td>
+                    <td>${biomass}</td>
+                    <td>${survival}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+
+                // Datos Gráfico
+                labels.push(rec.date.substring(5)); // Mes-Día
+                dataPoints.push(rec.weight);
+            });
+        }
+
+        // 4. Dibujar Gráfico
+        renderChart(labels, dataPoints);
+    };
+
+    // Función para renderizar Chart.js
+    function renderChart(labels, data) {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        // Destruir anterior si existe
+        if (growthChartInstance) growthChartInstance.destroy();
+
+        growthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Peso Promedio (g)',
+                    data: data,
+                    borderColor: '#006064',
+                    backgroundColor: 'rgba(0, 96, 100, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3 // Curva suave
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, title: {display:true, text:'Gramos'} }
+                }
+            }
+        });
+    }
+
+
+    // --- ALARMA ---
+    let unsubscribeAlarm = null;
+    function startAlarmListener() {
+        if(unsubscribeAlarm) return;
+        const q = query(collection(db, "active_alarms"), orderBy("timestamp", "desc"), limit(1));
         unsubscribeAlarm = onSnapshot(q, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
                 if (change.type === "added") {
                     const alarm = change.doc.data();
-                    
-                    // VALIDACIÓN 1: ¿Es una alarma fresca? (menos de 1 min)
-                    const alarmTime = alarm.timestamp.toDate();
-                    const now = new Date();
-                    const diffSeconds = (now - alarmTime) / 1000;
-                    
-                    if (diffSeconds > 60) return; // Ignorar alarmas viejas al cargar
-
-                    // VALIDACIÓN 2: ¿Fui yo?
-                    if (alarm.originSessionId === SESSION_ID) {
-                        console.log("Ignorando mi propia alarma.");
-                        return;
-                    }
-
-                    // SI LLEGO AQUÍ: ¡ES UNA EMERGENCIA DE OTRO!
+                    if (((new Date() - alarm.timestamp.toDate()) / 1000) > 60) return;
+                    if (alarm.originSessionId === SESSION_ID) return;
                     triggerVisualAlarm(alarm);
                 }
             });
@@ -437,27 +590,17 @@
     }
 
     function triggerVisualAlarm(data) {
-        // 1. Llenar datos
         document.getElementById('alarm-pool').innerText = "PISCINA " + data.poolId;
         document.getElementById('alarm-date').innerText = data.date;
         document.getElementById('alarm-time').innerText = data.time;
         document.getElementById('alarm-value').innerText = data.value;
         document.getElementById('alarm-temp').innerText = data.temp;
-
-        // 2. Mostrar Overlay
-        const overlay = document.getElementById('alarm-overlay');
-        overlay.classList.remove('hidden');
-
-        // 3. Tocar Sonido
+        document.getElementById('alarm-overlay').classList.remove('hidden');
         const audio = document.getElementById('alarm-sound');
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log("Navegador bloqueó el audio automático:", e));
-        
-        // Vibrar si es móvil
-        if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 1000]);
+        audio.currentTime = 0; audio.play().catch(e=>{});
+        if(navigator.vibrate) navigator.vibrate([500, 200, 500]);
     }
 
-    // Función global para apagar
     window.stopAlarm = () => {
         document.getElementById('alarm-overlay').classList.add('hidden');
         document.getElementById('alarm-sound').pause();
@@ -470,3 +613,4 @@
 </script>
 </body>
 </html>
+
