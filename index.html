@@ -108,8 +108,9 @@
                 <button class="dash-btn" onclick="navigation.showScreen('feeding-screen'); loadPoolsForSelect('feed-pool-select');">Registro de Alimentación</button>
                 <button class="dash-btn" onclick="navigation.showScreen('water-screen'); loadPoolsForSelect('water-pool-select');">Calidad de Agua</button>
                 <button class="dash-btn" onclick="navigation.showScreen('bio-screen'); loadPoolsForSelect('bio-pool-select');">Biometrías</button>
-                
                 <button class="dash-btn" onclick="navigation.showScreen('status-screen'); loadPoolsForSelect('status-pool-select');">Estatus de Piscinas</button>
+                
+                <button class="dash-btn" onclick="navigation.showScreen('inputs-screen'); loadPoolsForSelect('inputs-pool-select');">Registro de Insumos</button>
             </div>
         </div>
     </section>
@@ -230,18 +231,8 @@
         </div>
         <div class="content-area">
             <form id="status-form">
-                <div class="input-group">
-                    <label>Fecha de Registro</label>
-                    <input type="date" id="status-date" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Seleccionar Piscina</label>
-                    <select id="status-pool-select" required>
-                        <option value="">Cargando...</option>
-                    </select>
-                </div>
-
+                <div class="input-group"><label>Fecha de Registro</label><input type="date" id="status-date" required></div>
+                <div class="input-group"><label>Seleccionar Piscina</label><select id="status-pool-select" required><option value="">Cargando...</option></select></div>
                 <div class="input-group">
                     <label>Nuevo Estado</label>
                     <select id="status-type" required style="padding: 15px; font-weight: bold; color: var(--primary-color);">
@@ -252,13 +243,65 @@
                         <option value="Siembra">Siembra</option>
                     </select>
                 </div>
-
                 <button type="button" onclick="saveStatus()" class="primary-btn" style="margin-top: 20px;">GUARDAR ESTATUS</button>
             </form>
-            
-            <p style="margin-top: 30px; color: #666; font-size: 0.9em; text-align: center;">
-                Al guardar, se registrará el evento en el historial de la piscina.
-            </p>
+        </div>
+    </section>
+
+    <section id="inputs-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Registro de Insumos</h3>
+        </div>
+        <div class="content-area">
+            <form id="inputs-form">
+                <div class="input-group">
+                    <label>Fecha de Aplicación</label>
+                    <input type="date" id="input-date" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Seleccionar Piscina</label>
+                    <select id="inputs-pool-select" required><option value="">Cargando...</option></select>
+                </div>
+
+                <div class="input-group">
+                    <label>Tipo de Insumo</label>
+                    <select id="input-type" required>
+                        <option value="">-- Seleccione --</option>
+                        <option value="Enmienda">Enmienda (Cal, Silicato)</option>
+                        <option value="Fertilizante">Fertilizante (Urea, etc)</option>
+                        <option value="Probiótico">Probiótico / Biorremediador</option>
+                        <option value="Melaza">Melaza / Fuente Carbono</option>
+                        <option value="Medicamento">Medicamento / Vitamina</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="input-product" placeholder="Ej: Cal Agrícola, Sanolife..." required>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="input-group">
+                        <label>Cantidad</label>
+                        <input type="number" id="input-amount" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Unidad</label>
+                        <select id="input-unit">
+                            <option value="Kg">Kilogramos (Kg)</option>
+                            <option value="Lt">Litros (Lt)</option>
+                            <option value="Gr">Gramos (g)</option>
+                            <option value="Lb">Libras (Lb)</option>
+                            <option value="Sacos">Sacos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveInput()" class="primary-btn" style="margin-top: 10px;">GUARDAR INSUMO</button>
+            </form>
         </div>
     </section>
 
@@ -315,7 +358,8 @@
     document.getElementById('feed-date').value = today;
     document.getElementById('water-date').value = today;
     document.getElementById('bio-date').value = today;
-    document.getElementById('status-date').value = today; // Nueva fecha defecto
+    document.getElementById('status-date').value = today;
+    document.getElementById('input-date').value = today; // Default Insumos
     document.getElementById('water-time').value = new Date().toTimeString().substring(0,5);
 
     // --- NAVEGACIÓN ---
@@ -520,39 +564,48 @@
         });
     }
 
-    // --- ESTATUS DE PISCINAS (NUEVO) ---
+    // --- ESTATUS DE PISCINAS ---
     window.saveStatus = async () => {
         if (!auth.currentUser) return alert("Sesión expirada");
-
         const date = document.getElementById('status-date').value;
         const poolId = document.getElementById('status-pool-select').value;
         const status = document.getElementById('status-type').value;
+        if (!date || !poolId || !status) return alert("Faltan datos");
 
-        if (!date || !poolId || !status) {
-            return alert("Por favor complete todos los campos (Fecha, Piscina y Estado).");
-        }
+        try {
+            await addDoc(collection(db, "pool_status"), { date, poolId, status, user: auth.currentUser.email, timestamp: new Date() });
+            alert(`Estado actualizado a: ${status}`); window.navigation.goBack();
+        } catch (error) { alert("Error: " + error.message); }
+    };
 
-        const btn = document.querySelector('#status-screen button.primary-btn');
+    // --- INSUMOS (NUEVO) ---
+    window.saveInput = async () => {
+        if (!auth.currentUser) return alert("Sesión expirada");
+        
+        const date = document.getElementById('input-date').value;
+        const poolId = document.getElementById('inputs-pool-select').value;
+        const type = document.getElementById('input-type').value;
+        const product = document.getElementById('input-product').value;
+        const amount = parseFloat(document.getElementById('input-amount').value);
+        const unit = document.getElementById('input-unit').value;
+
+        if(!date || !poolId || !type || !product || !amount) return alert("Por favor complete todos los campos.");
+
+        const btn = document.querySelector('#inputs-screen button.primary-btn');
         btn.innerText = "Guardando..."; btn.disabled = true;
 
         try {
-            // Guardamos en la colección 'pool_status'
-            await addDoc(collection(db, "pool_status"), {
-                date: date,
-                poolId: poolId,
-                status: status,
+            await addDoc(collection(db, "inputs_registry"), {
+                date, poolId, type, product, amount, unit,
                 user: auth.currentUser.email,
                 timestamp: new Date()
             });
-
-            alert(`Estado de Piscina ${poolId} actualizado a: ${status}`);
-            window.navigation.goBack();
-        } catch (error) {
-            console.error(error);
-            alert("Error al guardar: " + error.message);
-        } finally {
-            btn.innerText = "GUARDAR ESTATUS"; btn.disabled = false;
-        }
+            alert("Insumo registrado correctamente.");
+            // Limpiar campos de cantidad/producto para agilizar
+            document.getElementById('input-amount').value = "";
+            document.getElementById('input-product').value = "";
+        } catch(e) { alert("Error: " + e.message); }
+        finally { btn.innerText = "GUARDAR INSUMO"; btn.disabled = false; }
     };
 
     // --- ALARMA ---
@@ -596,3 +649,4 @@
 </script>
 </body>
 </html>
+
