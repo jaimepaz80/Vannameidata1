@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vannamei Data - Gestión Acuícola</title>
     <style>
-        /* Estilos Generales - Look Profesional y Limpio */
+        /* --- ESTILOS (CSS) --- */
         :root {
-            --primary-color: #006064; /* Cyan oscuro - Tema Acuicultura */
+            --primary-color: #006064; 
             --secondary-color: #0097a7;
             --bg-color: #f4f6f8;
             --text-color: #333;
             --white: #ffffff;
+            --error-color: #d32f2f;
         }
 
         body {
@@ -26,10 +27,9 @@
             color: var(--text-color);
         }
 
-        /* Contenedor Principal */
         .app-container {
             width: 100%;
-            max-width: 480px; /* Diseño tipo móvil/app */
+            max-width: 480px; 
             background: var(--white);
             min-height: 100vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -38,12 +38,9 @@
             flex-direction: column;
         }
 
-        /* Utilidad para ocultar pantallas */
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
-        /* --- Pantalla de Login --- */
+        /* Login */
         #login-screen {
             flex: 1;
             display: flex;
@@ -54,62 +51,60 @@
             color: white;
         }
 
-        h1, h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
+        h1, h2, h3 { text-align: center; margin-bottom: 1rem; }
 
-        .input-group {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
+        .input-group { position: relative; margin-bottom: 1.5rem; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
 
         input {
             width: 100%;
             padding: 12px;
-            border: none;
+            border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 16px;
-            box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
+            box-sizing: border-box;
         }
+        
+        input:focus { outline: 2px solid var(--secondary-color); border-color: transparent; }
 
-        /* Botón del Ojo */
-        .toggle-password {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #666;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-
+        /* Botones */
         button.primary-btn {
             width: 100%;
-            padding: 12px;
-            background-color: var(--white);
-            color: var(--primary-color);
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
+        
+        button.primary-btn:active { transform: scale(0.98); }
 
-        button.primary-btn:hover {
-            background-color: #e0f7fa;
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 38px; /* Ajustado para cuando hay label */
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #666;
         }
+        #login-screen .toggle-password { top: 50%; transform: translateY(-50%); color: #ddd; }
 
-        /* --- Panel de Control y Pantallas Internas --- */
+        /* Headers */
         .screen-header {
             background-color: var(--primary-color);
             color: white;
             padding: 1rem;
             display: flex;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .back-btn {
@@ -119,15 +114,12 @@
             font-size: 1.5rem;
             cursor: pointer;
             margin-right: 1rem;
+            padding: 0 10px;
         }
 
-        .content-area {
-            padding: 1.5rem;
-            flex: 1;
-            overflow-y: auto;
-        }
+        .content-area { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 4rem; }
 
-        /* Grid de Botones del Dashboard */
+        /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -142,28 +134,29 @@
             text-align: center;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
+            color: var(--primary-color);
+            font-weight: 600;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: 500;
-            color: var(--primary-color);
         }
 
-        .dash-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: var(--secondary-color);
-        }
+        .dash-btn:active { background-color: #e0f7fa; }
 
-        /* Mensaje de error */
-        #login-error {
-            color: #ffcdd2;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 0.9rem;
+        /* Estilos específicos Configuración */
+        .pool-input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 6px;
         }
+        .pool-input-row label { margin: 0; font-weight: normal; }
+        .pool-input-row input { width: 80px; text-align: center; }
+
+        #login-error { color: #ffcdd2; text-align: center; margin-top: 10px; font-size: 0.9rem; }
 
     </style>
 </head>
@@ -173,21 +166,16 @@
     
     <section id="login-screen">
         <h2>Vannamei Data</h2>
-        <p style="text-align: center; opacity: 0.9;">Gestión Productiva</p>
+        <p style="text-align: center; opacity: 0.9; margin-top: -10px;">Gestión Productiva</p>
         
         <form id="login-form">
             <div class="input-group">
-                <input type="email" id="email" placeholder="Usuario (Email)" required autocomplete="username" value="vannameidata@gmail.com">
+                <input type="email" id="email" placeholder="Usuario" required autocomplete="username" value="vannameidata@gmail.com">
             </div>
             
             <div class="input-group">
                 <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
-                <button type="button" class="toggle-password" id="toggle-pwd-btn" title="Mostrar contraseña">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                </button>
+                <button type="button" class="toggle-password" id="toggle-pwd-btn">👁️</button>
             </div>
 
             <button type="submit" class="primary-btn">INGRESAR</button>
@@ -203,33 +191,64 @@
         <div class="content-area">
             <p>Bienvenido, Administrador.</p>
             <div class="dashboard-grid">
-                <button class="dash-btn" onclick="navigation.goTo('config-piscinas')">Configuración de Piscinas</button>
-                <button class="dash-btn" onclick="navigation.goTo('registro-alimentacion')">Registro de Alimentación</button>
-                <button class="dash-btn" onclick="navigation.goTo('calidad-agua')">Calidad de Agua</button>
-                <button class="dash-btn" onclick="navigation.goTo('biometrias')">Biometrías</button>
-                <button class="dash-btn" onclick="navigation.goTo('estatus-piscinas')">Estatus de Piscinas</button>
+                <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
+                
+                <button class="dash-btn" onclick="navigation.goToGeneric('Registro de Alimentación')">Registro de Alimentación</button>
+                <button class="dash-btn" onclick="navigation.goToGeneric('Calidad de Agua')">Calidad de Agua</button>
+                <button class="dash-btn" onclick="navigation.goToGeneric('Biometrías')">Biometrías</button>
+                <button class="dash-btn" onclick="navigation.goToGeneric('Estatus de Piscinas')">Estatus de Piscinas</button>
             </div>
+        </div>
+    </section>
+
+    <section id="config-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Configuración</h3>
+        </div>
+        <div class="content-area">
+            <form id="config-form">
+                <div class="input-group">
+                    <label>Nombre de la Granja</label>
+                    <input type="text" id="farm-name" placeholder="Ej: Santa Clara" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Cantidad de Piscinas</label>
+                    <input type="number" id="pool-count" placeholder="0" min="1" max="50" oninput="renderPoolInputs(this.value)">
+                </div>
+
+                <div style="border-top: 1px solid #eee; margin: 20px 0;"></div>
+                <p style="font-size:0.9rem; color:#666;">Áreas por Piscina (Hectáreas):</p>
+
+                <div id="pool-areas-container">
+                    </div>
+
+                <button type="button" onclick="saveConfig()" class="primary-btn" style="margin-top: 20px;">GUARDAR</button>
+            </form>
         </div>
     </section>
 
     <section id="generic-page" class="hidden">
         <div class="screen-header">
             <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
-            <h3 id="page-title">Título Página</h3>
+            <h3 id="page-title">Título</h3>
         </div>
         <div class="content-area">
-            <p>Contenido de la sección: <span id="page-content-name" style="font-weight:bold;"></span></p>
-            <p><em>(Formulario en construcción...)</em></p>
+            <p>Módulo: <span id="page-content-name" style="font-weight:bold;"></span></p>
+            <p><em>En construcción...</em></p>
         </div>
     </section>
 
 </div>
 
 <script type="module">
-    // --- 1. CONFIGURACIÓN DE FIREBASE ---
+    // 1. IMPORTAR LIBRERÍAS DE FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // 2. CONFIGURACIÓN DE TU PROYECTO
     const firebaseConfig = {
       apiKey: "AIzaSyBBgvzjBdgvSlHiIqyGL3abcG6fHFS-m6I",
       authDomain: "vannamei--data.firebaseapp.com",
@@ -240,96 +259,169 @@
       measurementId: "G-MN2YM6T1LE"
     };
 
-    // Inicializar Firebase (Conectado pero no usado para Auth en este paso por requerimiento específico)
+    // 3. INICIALIZAR FIREBASE
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
-    console.log("Firebase inicializado correctamente");
+    const db = getFirestore(app); // Base de datos lista
 
+    console.log("Sistema Vannamei Data iniciado.");
 
-    // --- 2. LÓGICA DE LA APLICACIÓN ---
-    
-    // Credenciales Hardcodeadas (Según requerimiento)
+    // --- VARIABLES Y CONSTANTES ---
     const VALID_USER = "vannameidata@gmail.com";
-    const VALID_PASS = "Majagual*2026"; // Nota: Mayúsculas importan
+    const VALID_PASS = "Majagual*2026";
 
-    // Referencias al DOM
-    const loginForm = document.getElementById('login-form');
-    const emailInput = document.getElementById('email');
-    const passInput = document.getElementById('password');
-    const loginError = document.getElementById('login-error');
-    const togglePwdBtn = document.getElementById('toggle-pwd-btn');
-    
-    // Sistema de Navegación Simple
+    // --- NAVEGACIÓN ---
     window.navigation = {
-        history: [], // Pila para guardar historial si fuera necesario
-        
-        // Función para cambiar de pantalla
         showScreen: (screenId) => {
-            // Ocultar todas las secciones directas de app-container
             document.querySelectorAll('.app-container > section').forEach(el => el.classList.add('hidden'));
-            // Mostrar la deseada
             document.getElementById(screenId).classList.remove('hidden');
+            window.scrollTo(0,0);
         },
-
-        goTo: (pageName) => {
-            // Lógica para mostrar las sub-páginas
-            // Por ahora usamos una página genérica y cambiamos el título
-            const titleMap = {
-                'config-piscinas': 'Configuración de Piscinas',
-                'registro-alimentacion': 'Registro de Alimentación',
-                'calidad-agua': 'Calidad de Agua',
-                'biometrias': 'Biometrías',
-                'estatus-piscinas': 'Estatus de Piscinas'
-            };
-
-            document.getElementById('page-title').innerText = titleMap[pageName] || 'Página';
-            document.getElementById('page-content-name').innerText = titleMap[pageName];
-            
-            // Navegar
-            window.navigation.showScreen('generic-page');
-        },
-
         goBack: () => {
-            // Regresar al Dashboard desde cualquier sub-página
             window.navigation.showScreen('dashboard-screen');
         },
-
+        goToGeneric: (title) => {
+            document.getElementById('page-title').innerText = title;
+            document.getElementById('page-content-name').innerText = title;
+            window.navigation.showScreen('generic-page');
+        },
         logout: () => {
-            // Regresar al Login y limpiar campos
-            passInput.value = "";
+            document.getElementById('password').value = "";
             window.navigation.showScreen('login-screen');
         }
     };
 
-    // --- 3. EVENT LISTENERS ---
-
-    // Toggle Mostrar/Ocultar Contraseña
-    togglePwdBtn.addEventListener('click', () => {
-        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passInput.setAttribute('type', type);
-        
-        // Cambiar icono visualmente (opcional, aquí solo cambia opacidad para feedback)
-        togglePwdBtn.style.opacity = type === 'text' ? '1' : '0.6';
-    });
-
-    // Manejo del Submit del Login
+    // --- LÓGICA DE LOGIN ---
+    const loginForm = document.getElementById('login-form');
     loginForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Evitar recarga de página
+        e.preventDefault();
+        const u = document.getElementById('email').value.toLowerCase();
+        const p = document.getElementById('password').value;
         
-        const user = emailInput.value.toLowerCase(); // Normalizar email
-        const pass = passInput.value;
-
-        if (user === VALID_USER && pass === VALID_PASS) {
-            loginError.classList.add('hidden');
+        if(u === VALID_USER && p === VALID_PASS) {
+            document.getElementById('login-error').classList.add('hidden');
             window.navigation.showScreen('dashboard-screen');
         } else {
-            loginError.classList.remove('hidden');
-            // Efecto visual de error
-            loginForm.classList.add('shake');
-            setTimeout(() => loginForm.classList.remove('shake'), 500);
+            document.getElementById('login-error').classList.remove('hidden');
         }
     });
+
+    // Botón Ojo Contraseña
+    document.getElementById('toggle-pwd-btn').addEventListener('click', () => {
+        const input = document.getElementById('password');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+
+    // --- LÓGICA DE CONFIGURACIÓN DE PISCINAS (NUEVO) ---
+
+    // 1. Generar campos dinámicamente
+    window.renderPoolInputs = (val) => {
+        const container = document.getElementById('pool-areas-container');
+        const count = parseInt(val);
+        
+        // Si borran el número, limpiar
+        if(!count || count < 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Guardar valores actuales si existen para no perderlos al redibujar (opcional simple)
+        // Para simplicidad: Limpiamos y recreamos.
+        container.innerHTML = '';
+
+        for(let i = 1; i <= count; i++) {
+            const div = document.createElement('div');
+            div.className = 'pool-input-row';
+            div.innerHTML = `
+                <label>Piscina ${i}</label>
+                <input type="number" step="0.01" class="pool-area-input" data-id="${i}" placeholder="Has">
+            `;
+            container.appendChild(div);
+        }
+    };
+
+    // 2. Guardar en Firebase
+    window.saveConfig = async () => {
+        const btn = document.querySelector('#config-screen button.primary-btn');
+        const originalText = btn.innerText;
+        
+        const farmName = document.getElementById('farm-name').value;
+        const poolCount = document.getElementById('pool-count').value;
+        
+        // Recopilar áreas
+        const inputs = document.querySelectorAll('.pool-area-input');
+        let pools = [];
+        let allFilled = true;
+
+        inputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if(!val) allFilled = false;
+            pools.push({
+                id: input.dataset.id,
+                area: val || 0
+            });
+        });
+
+        if(!farmName || !poolCount || pools.length === 0) {
+            alert("Por favor completa el nombre de la granja y la cantidad de piscinas.");
+            return;
+        }
+
+        btn.innerText = "Guardando...";
+        btn.disabled = true;
+
+        try {
+            // Guardamos en la colección 'config', documento 'general'
+            await setDoc(doc(db, "config", "general"), {
+                farmName: farmName,
+                poolCount: parseInt(poolCount),
+                pools: pools,
+                updatedAt: new Date()
+            });
+
+            alert("¡Configuración guardada correctamente!");
+            window.navigation.goBack();
+
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            alert("Error: " + error.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    };
+
+    // 3. Cargar datos existentes al entrar
+    window.loadConfig = async () => {
+        try {
+            const docRef = doc(db, "config", "general");
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('farm-name').value = data.farmName || '';
+                document.getElementById('pool-count').value = data.poolCount || '';
+                
+                // Regenerar inputs
+                renderPoolInputs(data.poolCount);
+                
+                // Llenar valores de hectáreas
+                const inputs = document.querySelectorAll('.pool-area-input');
+                if(data.pools && data.pools.length > 0) {
+                    data.pools.forEach((pool, index) => {
+                        if(inputs[index]) {
+                            inputs[index].value = pool.area;
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.log("Aún no hay configuración guardada o error de red.");
+        }
+    };
 
 </script>
 </body>
 </html>
+
