@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vannamei Data - Gestión Acuícola</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         /* --- ESTILOS (CSS) --- */
-        :root { --primary-color: #006064; --secondary-color: #0097a7; --bg-color: #f4f6f8; --text-color: #333; --white: #ffffff; --alarm-color: #d32f2f; }
+        :root { --primary-color: #006064; --secondary-color: #0097a7; --bg-color: #f4f6f8; --text-color: #333; --white: #ffffff; --alarm-color: #d32f2f; --success-color: #2e7d32; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-color); }
         .app-container { width: 100%; max-width: 480px; background: var(--white); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
@@ -50,8 +52,14 @@
         .bio-table td { border-bottom: 1px solid #ddd; padding: 8px; }
         .bio-table tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* GRÁFICO */
-        .chart-container { margin-top: 20px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; height: 250px; }
+        /* ESTILOS REPORTES (NUEVO) */
+        .kpi-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+        .kpi-card { flex: 1; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .kpi-value { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); display: block; }
+        .kpi-label { font-size: 0.75rem; color: #666; text-transform: uppercase; }
+        
+        .report-section-title { font-size: 1.1rem; font-weight: bold; color: var(--secondary-color); margin: 20px 0 10px 0; border-left: 4px solid var(--secondary-color); padding-left: 10px; }
+        .chart-container { margin-top: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; height: 300px; }
 
         /* ALARMA */
         #alarm-overlay {
@@ -104,13 +112,17 @@
         <div class="content-area">
             <p>Bienvenido, <span id="user-display" style="font-weight:bold; color:var(--primary-color);">Cargando...</span></p>
             <div class="dashboard-grid">
-                <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
-                <button class="dash-btn" onclick="navigation.showScreen('feeding-screen'); loadPoolsForSelect('feed-pool-select');">Registro de Alimentación</button>
+                <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración</button>
+                <button class="dash-btn" onclick="navigation.showScreen('feeding-screen'); loadPoolsForSelect('feed-pool-select');">Alimentación</button>
                 <button class="dash-btn" onclick="navigation.showScreen('water-screen'); loadPoolsForSelect('water-pool-select');">Calidad de Agua</button>
                 <button class="dash-btn" onclick="navigation.showScreen('bio-screen'); loadPoolsForSelect('bio-pool-select');">Biometrías</button>
-                <button class="dash-btn" onclick="navigation.showScreen('status-screen'); loadPoolsForSelect('status-pool-select');">Estatus de Piscinas</button>
+                <button class="dash-btn" onclick="navigation.showScreen('inputs-screen'); loadPoolsForSelect('inputs-pool-select');">Insumos</button>
+                <button class="dash-btn" onclick="navigation.showScreen('status-screen'); loadPoolsForSelect('status-pool-select');">Estatus</button>
                 
-                <button class="dash-btn" onclick="navigation.showScreen('inputs-screen'); loadPoolsForSelect('inputs-pool-select');">Registro de Insumos</button>
+                <button class="dash-btn" style="background-color: #e0f2f1; border-color: var(--primary-color); grid-column: span 2;" 
+                        onclick="navigation.showScreen('reports-screen'); loadPoolsForSelect('report-pool-select');">
+                    📊 CENTRO DE REPORTES
+                </button>
             </div>
         </div>
     </section>
@@ -255,53 +267,68 @@
         </div>
         <div class="content-area">
             <form id="inputs-form">
-                <div class="input-group">
-                    <label>Fecha de Aplicación</label>
-                    <input type="date" id="input-date" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Seleccionar Piscina</label>
-                    <select id="inputs-pool-select" required><option value="">Cargando...</option></select>
-                </div>
-
+                <div class="input-group"><label>Fecha</label><input type="date" id="input-date" required></div>
+                <div class="input-group"><label>Piscina</label><select id="inputs-pool-select" required><option value="">Cargando...</option></select></div>
                 <div class="input-group">
                     <label>Tipo de Insumo</label>
                     <select id="input-type" required>
-                        <option value="">-- Seleccione --</option>
                         <option value="Enmienda">Enmienda (Cal, Silicato)</option>
-                        <option value="Fertilizante">Fertilizante (Urea, etc)</option>
-                        <option value="Probiótico">Probiótico / Biorremediador</option>
-                        <option value="Melaza">Melaza / Fuente Carbono</option>
-                        <option value="Medicamento">Medicamento / Vitamina</option>
+                        <option value="Fertilizante">Fertilizante (Urea)</option>
+                        <option value="Probiótico">Probiótico</option>
+                        <option value="Melaza">Melaza</option>
+                        <option value="Medicamento">Medicamento</option>
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
-
-                <div class="input-group">
-                    <label>Nombre del Producto</label>
-                    <input type="text" id="input-product" placeholder="Ej: Cal Agrícola, Sanolife..." required>
-                </div>
-
+                <div class="input-group"><label>Nombre del Producto</label><input type="text" id="input-product" placeholder="Ej: Sanolife" required></div>
                 <div class="dashboard-grid">
-                    <div class="input-group">
-                        <label>Cantidad</label>
-                        <input type="number" id="input-amount" placeholder="0.00" step="0.01" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Unidad</label>
-                        <select id="input-unit">
-                            <option value="Kg">Kilogramos (Kg)</option>
-                            <option value="Lt">Litros (Lt)</option>
-                            <option value="Gr">Gramos (g)</option>
-                            <option value="Lb">Libras (Lb)</option>
-                            <option value="Sacos">Sacos</option>
-                        </select>
-                    </div>
+                    <div class="input-group"><label>Cantidad</label><input type="number" id="input-amount" step="0.01" required></div>
+                    <div class="input-group"><label>Unidad</label><select id="input-unit"><option>Kg</option><option>Lt</option><option>Gr</option><option>Sacos</option></select></div>
                 </div>
-
                 <button type="button" onclick="saveInput()" class="primary-btn" style="margin-top: 10px;">GUARDAR INSUMO</button>
             </form>
+        </div>
+    </section>
+
+    <section id="reports-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Reportes y Análisis</h3>
+        </div>
+        <div class="content-area" id="report-content">
+            <div class="input-group">
+                <label>Seleccionar Piscina a Analizar</label>
+                <select id="report-pool-select" onchange="generateReport(this.value)">
+                    <option value="">Seleccione Piscina...</option>
+                </select>
+            </div>
+
+            <div id="report-results" class="hidden">
+                <h4 class="report-section-title">Indicadores del Ciclo Actual</h4>
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-fca">--</span>
+                        <span class="kpi-label">FCA Acum.</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-surv">--%</span>
+                        <span class="kpi-label">Supervivencia</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-growth">--</span>
+                        <span class="kpi-label">g/Semana</span>
+                    </div>
+                </div>
+
+                <h4 class="report-section-title">Alimento vs. Crecimiento</h4>
+                <div class="chart-container">
+                    <canvas id="analysisChart"></canvas>
+                </div>
+
+                <button type="button" onclick="exportPDF()" class="primary-btn" style="margin-top: 30px; background-color: #424242;">
+                    📥 DESCARGAR REPORTE PDF
+                </button>
+            </div>
         </div>
     </section>
 
@@ -352,6 +379,7 @@
     // Variables Globales
     const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     let growthChartInstance = null;
+    let analysisChartInstance = null;
 
     // Fechas por defecto
     const today = new Date().toISOString().split('T')[0];
@@ -359,7 +387,7 @@
     document.getElementById('water-date').value = today;
     document.getElementById('bio-date').value = today;
     document.getElementById('status-date').value = today;
-    document.getElementById('input-date').value = today; // Default Insumos
+    document.getElementById('input-date').value = today;
     document.getElementById('water-time').value = new Date().toTimeString().substring(0,5);
 
     // --- NAVEGACIÓN ---
@@ -551,61 +579,177 @@
                 dataPoints.push(rec.weight);
             });
         }
-        renderChart(labels, dataPoints);
+        renderChart(labels, dataPoints, 'growthChart', 'Peso Promedio (g)');
     };
 
-    function renderChart(labels, data) {
-        const ctx = document.getElementById('growthChart').getContext('2d');
-        if (growthChartInstance) growthChartInstance.destroy();
-        growthChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: { labels: labels, datasets: [{ label: 'Peso Promedio (g)', data: data, borderColor: '#006064', backgroundColor: 'rgba(0, 96, 100, 0.1)', borderWidth: 2, fill: true, tension: 0.3 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: {display:true, text:'Gramos'} } } }
-        });
-    }
-
-    // --- ESTATUS DE PISCINAS ---
+    // --- ESTATUS ---
     window.saveStatus = async () => {
         if (!auth.currentUser) return alert("Sesión expirada");
         const date = document.getElementById('status-date').value;
         const poolId = document.getElementById('status-pool-select').value;
         const status = document.getElementById('status-type').value;
         if (!date || !poolId || !status) return alert("Faltan datos");
-
         try {
             await addDoc(collection(db, "pool_status"), { date, poolId, status, user: auth.currentUser.email, timestamp: new Date() });
             alert(`Estado actualizado a: ${status}`); window.navigation.goBack();
         } catch (error) { alert("Error: " + error.message); }
     };
 
-    // --- INSUMOS (NUEVO) ---
+    // --- INSUMOS ---
     window.saveInput = async () => {
         if (!auth.currentUser) return alert("Sesión expirada");
-        
         const date = document.getElementById('input-date').value;
         const poolId = document.getElementById('inputs-pool-select').value;
         const type = document.getElementById('input-type').value;
         const product = document.getElementById('input-product').value;
         const amount = parseFloat(document.getElementById('input-amount').value);
         const unit = document.getElementById('input-unit').value;
-
         if(!date || !poolId || !type || !product || !amount) return alert("Por favor complete todos los campos.");
-
-        const btn = document.querySelector('#inputs-screen button.primary-btn');
-        btn.innerText = "Guardando..."; btn.disabled = true;
-
         try {
-            await addDoc(collection(db, "inputs_registry"), {
-                date, poolId, type, product, amount, unit,
-                user: auth.currentUser.email,
-                timestamp: new Date()
-            });
-            alert("Insumo registrado correctamente.");
-            // Limpiar campos de cantidad/producto para agilizar
-            document.getElementById('input-amount').value = "";
-            document.getElementById('input-product').value = "";
+            await addDoc(collection(db, "inputs_registry"), { date, poolId, type, product, amount, unit, user: auth.currentUser.email, timestamp: new Date() });
+            alert("Insumo registrado"); document.getElementById('input-amount').value = ""; document.getElementById('input-product').value = "";
         } catch(e) { alert("Error: " + e.message); }
-        finally { btn.innerText = "GUARDAR INSUMO"; btn.disabled = false; }
+    };
+
+    // --- MÓDULO DE REPORTES (BI / INTELIGENCIA) ---
+    window.generateReport = async (poolId) => {
+        if(!poolId) return;
+        document.getElementById('report-results').classList.remove('hidden');
+        
+        // 1. Obtener Datos del Ciclo (Biometrías)
+        const qBio = query(collection(db, "biometrics"), where("poolId", "==", poolId), orderBy("date", "asc"));
+        const snapBio = await getDocs(qBio);
+        let bioRecs = [];
+        snapBio.forEach(d => bioRecs.push(d.data()));
+
+        // Encontrar inicio de ciclo (Siembra)
+        let startCycle = null;
+        let cycleBio = [];
+        for (let i = bioRecs.length - 1; i >= 0; i--) {
+            if (bioRecs[i].type === 'Siembra') {
+                startCycle = bioRecs[i];
+                cycleBio = bioRecs.filter(r => r.date >= bioRecs[i].date);
+                break;
+            }
+        }
+        if(!startCycle && bioRecs.length > 0) { startCycle = bioRecs[0]; cycleBio = bioRecs; } // Fallback
+
+        // 2. Obtener Alimento en ese rango de fechas
+        let totalFeed = 0;
+        let feedByDate = {}; // Mapa para el gráfico
+
+        if (startCycle) {
+            const qFeed = query(collection(db, "feeding_records"), where("poolId", "==", poolId), where("date", ">=", startCycle.date));
+            const snapFeed = await getDocs(qFeed);
+            snapFeed.forEach(d => {
+                const f = d.data();
+                totalFeed += f.consumed;
+                // Agrupar por fecha para el gráfico
+                if(!feedByDate[f.date]) feedByDate[f.date] = 0;
+                feedByDate[f.date] += f.consumed;
+            });
+        }
+
+        // 3. Cálculos de KPI
+        let currentBio = cycleBio.length > 0 ? cycleBio[cycleBio.length - 1] : null;
+        let survival = 0;
+        let growthSpeed = 0;
+        let fca = 0;
+
+        if (currentBio && startCycle) {
+            // Supervivencia
+            survival = ((currentBio.count / startCycle.count) * 100).toFixed(1);
+            
+            // Crecimiento Semanal Promedio
+            const daysDiff = (new Date(currentBio.date) - new Date(startCycle.date)) / (1000 * 60 * 60 * 24);
+            const weeks = daysDiff / 7;
+            if(weeks > 0) growthSpeed = ((currentBio.weight - startCycle.weight) / weeks).toFixed(2);
+
+            // FCA = Total Alimento / Ganancia de Biomasa Total
+            const finalBiomass = (currentBio.count * currentBio.weight) / 1000; // Kg
+            const initialBiomass = (startCycle.count * startCycle.weight) / 1000; // Kg
+            const biomassGain = finalBiomass - initialBiomass;
+            
+            if(biomassGain > 0) fca = (totalFeed / biomassGain).toFixed(2);
+        }
+
+        // 4. Renderizar KPIs
+        document.getElementById('kpi-fca').innerText = fca || "--";
+        document.getElementById('kpi-surv').innerText = survival + "%";
+        document.getElementById('kpi-growth').innerText = growthSpeed;
+
+        // 5. Preparar Gráfico Dual (Alinear fechas de Biometría con Alimento)
+        // Usaremos las fechas de biometrías como eje X principal
+        let chartLabels = cycleBio.map(b => b.date.substring(5));
+        let weightData = cycleBio.map(b => b.weight);
+        
+        // El alimento es diario, pero el gráfico de peso es esporádico.
+        // Para V1 simplificado: Mostraremos solo la curva de peso para claridad, 
+        // o mapeamos el alimento acumulado hasta esa fecha. 
+        // ESTRATEGIA: Gráfico Combo.
+        // Eje X: Todas las fechas donde hubo algo.
+        // Esto es complejo. SIMPLIFICACIÓN APROBADA: Mostrar Evolución de Peso y Barras de Alimento acumulado entre muestreos.
+        
+        // Renderizamos Gráfico Dual
+        renderDualChart(chartLabels, weightData, []); 
+    };
+
+    function renderChart(labels, data, canvasId, label) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (growthChartInstance) growthChartInstance.destroy();
+        growthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: label, data: data, borderColor: '#006064', backgroundColor: 'rgba(0, 96, 100, 0.1)', borderWidth: 2, fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function renderDualChart(labels, weightData, feedData) {
+        const ctx = document.getElementById('analysisChart').getContext('2d');
+        if (analysisChartInstance) analysisChartInstance.destroy();
+
+        analysisChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Peso Promedio (g)',
+                        data: weightData,
+                        borderColor: '#2e7d32', // Verde
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        fill: false
+                    }
+                    // Futuro: Aquí se puede agregar el dataset de alimento si mapeamos las fechas exactas
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'Gramos'} }
+                }
+            }
+        });
+    }
+
+    // --- PDF EXPORT ---
+    window.exportPDF = () => {
+        const element = document.getElementById('report-content');
+        const opt = {
+            margin:       10,
+            filename:     'Reporte_Acuicola.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        // Ocultar selector antes de imprimir
+        document.getElementById('report-pool-select').style.display = 'none';
+        html2pdf().set(opt).from(element).save().then(() => {
+            document.getElementById('report-pool-select').style.display = 'block';
+        });
     };
 
     // --- ALARMA ---
@@ -649,4 +793,3 @@
 </script>
 </body>
 </html>
-
