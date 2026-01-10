@@ -10,24 +10,31 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-color); }
         .app-container { width: 100%; max-width: 480px; background: var(--white); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
+        
         /* Login */
         #login-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 2rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; }
         h1, h2, h3 { text-align: center; margin-bottom: 1rem; }
         .input-group { position: relative; margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        input:focus { outline: 2px solid var(--secondary-color); border-color: transparent; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: #fff; }
+        input:focus, select:focus { outline: 2px solid var(--secondary-color); border-color: transparent; }
+        
         button.primary-btn { width: 100%; padding: 14px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         button:disabled { opacity: 0.7; cursor: not-allowed; }
+        
         .toggle-password { position: absolute; right: 10px; top: 38px; cursor: pointer; background: none; border: none; color: #666; }
         #login-screen .toggle-password { top: 50%; transform: translateY(-50%); color: #ddd; }
+        
         /* Headers */
         .screen-header { background-color: var(--primary-color); color: white; padding: 1rem; display: flex; align-items: center; position: sticky; top: 0; z-index: 10; }
         .back-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-right: 1rem; padding: 0 10px; }
         .content-area { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 4rem; }
+        
         /* Dashboard Grid */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .dash-btn { background-color: var(--white); border: 1px solid #ddd; border-radius: 12px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: var(--primary-color); font-weight: 600; display: flex; align-items: center; justify-content: center; }
+        
+        /* Config & Forms */
         .pool-input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: #f9f9f9; padding: 8px; border-radius: 6px; }
         .pool-input-row label { margin: 0; font-weight: normal; }
         .pool-input-row input { width: 80px; text-align: center; }
@@ -63,7 +70,8 @@
             <p>Bienvenido, <span id="user-display" style="font-weight:bold; color:var(--primary-color);">Cargando...</span></p>
             <div class="dashboard-grid">
                 <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
-                <button class="dash-btn" onclick="navigation.goToGeneric('Registro de Alimentación')">Registro de Alimentación</button>
+                <button class="dash-btn" onclick="navigation.showScreen('feeding-screen'); loadPoolsForFeeding();">Registro de Alimentación</button>
+                
                 <button class="dash-btn" onclick="navigation.goToGeneric('Calidad de Agua')">Calidad de Agua</button>
                 <button class="dash-btn" onclick="navigation.goToGeneric('Biometrías')">Biometrías</button>
                 <button class="dash-btn" onclick="navigation.goToGeneric('Estatus de Piscinas')">Estatus de Piscinas</button>
@@ -93,6 +101,41 @@
         </div>
     </section>
 
+    <section id="feeding-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Alimentación</h3>
+        </div>
+        <div class="content-area">
+            <form id="feeding-form">
+                
+                <div class="input-group">
+                    <label>Fecha del Registro</label>
+                    <input type="date" id="feed-date" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Seleccionar Piscina</label>
+                    <select id="feed-pool-select" required>
+                        <option value="">Cargando piscinas...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Kilos Recargados (Alimentador)</label>
+                    <input type="number" id="feed-recharged" placeholder="0.00" step="0.01">
+                </div>
+
+                <div class="input-group">
+                    <label>Kilos Consumidos</label>
+                    <input type="number" id="feed-consumed" placeholder="0.00" step="0.01" required>
+                </div>
+
+                <button type="button" onclick="saveFeeding()" class="primary-btn" style="margin-top: 10px;">GUARDAR REGISTRO</button>
+            </form>
+        </div>
+    </section>
+
     <section id="generic-page" class="hidden">
         <div class="screen-header">
             <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
@@ -106,9 +149,9 @@
 </div>
 
 <script type="module">
-    // Importamos AUTHENTICATION
+    // Importamos AUTHENTICATION + FIRESTORE (Añadido 'collection' y 'addDoc')
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -123,7 +166,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app); // INICIAMOS AUTH
+    const auth = getAuth(app);
+
+    // --- CONFIGURACIÓN INICIAL ---
+    // Poner fecha de hoy automáticamente en los inputs de fecha
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('feed-date').value = today;
 
     // --- NAVEGACIÓN ---
     window.navigation = {
@@ -145,7 +193,7 @@
         }
     };
 
-    // --- LOGIN REAL (ESTO ES LO QUE TE FALTA) ---
+    // --- LOGIN ---
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
@@ -153,28 +201,22 @@
         const btn = document.getElementById('btn-ingresar');
         const err = document.getElementById('login-error');
         
-        btn.innerText = "Verificando...";
-        btn.disabled = true;
-        err.classList.add('hidden');
+        btn.innerText = "Verificando..."; btn.disabled = true; err.classList.add('hidden');
 
         try {
-            // AQUÍ OCURRE LA MAGIA: Nos conectamos a Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-            
-            // Si pasa esta línea, Firebase te aceptó y te dio el permiso
             document.getElementById('user-display').innerText = userCredential.user.email;
             window.navigation.showScreen('dashboard-screen');
         } catch (error) {
             console.error(error);
-            err.innerText = "Error: Usuario o Clave incorrectos en Firebase.";
+            err.innerText = "Error: Credenciales incorrectas.";
             err.classList.remove('hidden');
         } finally {
-            btn.innerText = "INGRESAR SEGURO";
-            btn.disabled = false;
+            btn.innerText = "INGRESAR SEGURO"; btn.disabled = false;
         }
     });
 
-    // --- GUARDAR CONFIGURACIÓN ---
+    // --- MÓDULO 1: CONFIGURACIÓN ---
     window.renderPoolInputs = (val) => {
         const container = document.getElementById('pool-areas-container');
         container.innerHTML = '';
@@ -186,37 +228,29 @@
     };
 
     window.saveConfig = async () => {
-        if (!auth.currentUser) {
-            alert("No hay sesión activa. Por favor re-ingresa.");
-            return;
-        }
+        if (!auth.currentUser) return alert("Sesión expirada");
         const farmName = document.getElementById('farm-name').value;
         const poolCount = document.getElementById('pool-count').value;
         const inputs = document.querySelectorAll('.pool-area-input');
         let pools = [];
         inputs.forEach(input => pools.push({ id: input.dataset.id, area: parseFloat(input.value) || 0 }));
 
-        if(!farmName || !poolCount || pools.length === 0) { alert("Faltan datos"); return; }
-
+        if(!farmName || !poolCount) return alert("Faltan datos");
+        
         const btn = document.querySelector('#config-screen button.primary-btn');
         btn.innerText = "Guardando..."; btn.disabled = true;
 
         try {
             await setDoc(doc(db, "config", "general"), {
                 farmName, poolCount: parseInt(poolCount), pools,
-                updatedBy: auth.currentUser.email,
-                updatedAt: new Date()
+                updatedBy: auth.currentUser.email
             });
-            alert("¡GUARDADO CON ÉXITO!"); // Si ves esto, funcionó
+            alert("Configuración guardada");
             window.navigation.goBack();
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
-            btn.innerText = "GUARDAR"; btn.disabled = false;
-        }
+        } catch (error) { alert("Error: " + error.message); } 
+        finally { btn.innerText = "GUARDAR"; btn.disabled = false; }
     };
 
-    // --- CARGAR DATOS ---
     window.loadConfig = async () => {
         if (!auth.currentUser) return;
         try {
@@ -229,9 +263,85 @@
                 const inputs = document.querySelectorAll('.pool-area-input');
                 data.pools.forEach((p, i) => { if(inputs[i]) inputs[i].value = p.area; });
             }
-        } catch (e) { console.log("Sin datos previos"); }
+        } catch (e) { console.log("Sin datos"); }
     };
 
+    // --- MÓDULO 2: ALIMENTACIÓN (NUEVO) ---
+    
+    // Función para cargar el selector de piscinas basado en la Configuración
+    window.loadPoolsForFeeding = async () => {
+        const select = document.getElementById('feed-pool-select');
+        select.innerHTML = '<option value="">Cargando...</option>';
+        
+        try {
+            // Leemos la configuración guardada para saber cuántas piscinas hay
+            const snap = await getDoc(doc(db, "config", "general"));
+            select.innerHTML = '<option value="">Seleccione Piscina</option>';
+            
+            if (snap.exists()) {
+                const data = snap.data();
+                // Creamos una opción por cada piscina configurada
+                if(data.pools && data.pools.length > 0) {
+                    data.pools.forEach(pool => {
+                        const option = document.createElement('option');
+                        option.value = pool.id; // Guardamos el ID (ej: "1", "2")
+                        option.text = `Piscina ${pool.id} (${pool.area} Has)`;
+                        select.appendChild(option);
+                    });
+                }
+            } else {
+                alert("Primero debes configurar la granja en 'Configuración de Piscinas'");
+                window.navigation.goBack();
+            }
+        } catch (e) {
+            console.error(e);
+            select.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    };
+
+    // Función para Guardar el Registro Diario
+    window.saveFeeding = async () => {
+        if (!auth.currentUser) return alert("Sesión expirada");
+
+        const date = document.getElementById('feed-date').value;
+        const poolId = document.getElementById('feed-pool-select').value;
+        const recharged = parseFloat(document.getElementById('feed-recharged').value) || 0;
+        const consumed = parseFloat(document.getElementById('feed-consumed').value) || 0;
+
+        if(!date || !poolId) {
+            alert("Por favor selecciona Fecha y Piscina.");
+            return;
+        }
+
+        const btn = document.querySelector('#feeding-screen button.primary-btn');
+        btn.innerText = "Guardando..."; btn.disabled = true;
+
+        try {
+            // Guardamos en una colección nueva llamada 'feeding_records'
+            await addDoc(collection(db, "feeding_records"), {
+                date: date,
+                poolId: poolId,
+                kilosRecharged: recharged,
+                kilosConsumed: consumed,
+                userId: auth.currentUser.email,
+                timestamp: new Date()
+            });
+
+            alert("Registro de alimentación guardado correctamente.");
+            
+            // Limpiar campos (excepto fecha y piscina para facilitar ingreso rápido de la siguiente)
+            document.getElementById('feed-recharged').value = "";
+            document.getElementById('feed-consumed').value = "";
+            
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            alert("Error: " + error.message);
+        } finally {
+            btn.innerText = "GUARDAR REGISTRO"; btn.disabled = false;
+        }
+    };
+
+    // UI Helpers
     document.getElementById('toggle-pwd-btn').addEventListener('click', () => {
         const i = document.getElementById('password'); i.type = i.type === 'password' ? 'text' : 'password';
     });
