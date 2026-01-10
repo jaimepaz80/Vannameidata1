@@ -83,6 +83,7 @@
         }
         
         button.primary-btn:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .toggle-password {
             position: absolute;
@@ -178,8 +179,8 @@
                 <button type="button" class="toggle-password" id="toggle-pwd-btn">👁️</button>
             </div>
 
-            <button type="submit" class="primary-btn">INGRESAR</button>
-            <div id="login-error" class="hidden">Credenciales incorrectas</div>
+            <button type="submit" class="primary-btn" id="btn-ingresar">INGRESAR</button>
+            <div id="login-error" class="hidden"></div>
         </form>
     </section>
 
@@ -189,7 +190,7 @@
             <h3>Panel de Control</h3>
         </div>
         <div class="content-area">
-            <p>Bienvenido, Administrador.</p>
+            <p>Bienvenido, <span id="user-display">Administrador</span>.</p>
             <div class="dashboard-grid">
                 <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
                 
@@ -243,10 +244,11 @@
 </div>
 
 <script type="module">
-    // 1. IMPORTAR LIBRERÍAS DE FIREBASE
+    // 1. IMPORTAR LIBRERÍAS DE FIREBASE (Autenticación + Base de Datos)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 2. CONFIGURACIÓN DE TU PROYECTO
     const firebaseConfig = {
@@ -262,13 +264,10 @@
     // 3. INICIALIZAR FIREBASE
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
-    const db = getFirestore(app); // Base de datos lista
+    const db = getFirestore(app);
+    const auth = getAuth(app); // Autenticación inicializada
 
-    console.log("Sistema Vannamei Data iniciado.");
-
-    // --- VARIABLES Y CONSTANTES ---
-    const VALID_USER = "vannameidata@gmail.com";
-    const VALID_PASS = "Majagual*2026";
+    console.log("Sistema Vannamei Data iniciado con Autenticación Segura.");
 
     // --- NAVEGACIÓN ---
     window.navigation = {
@@ -285,24 +284,49 @@
             document.getElementById('page-content-name').innerText = title;
             window.navigation.showScreen('generic-page');
         },
-        logout: () => {
-            document.getElementById('password').value = "";
-            window.navigation.showScreen('login-screen');
+        logout: async () => {
+            try {
+                await signOut(auth);
+                document.getElementById('password').value = "";
+                window.navigation.showScreen('login-screen');
+            } catch(e) {
+                console.error("Error al salir", e);
+            }
         }
     };
 
-    // --- LÓGICA DE LOGIN ---
+    // --- LÓGICA DE LOGIN REAL CON FIREBASE ---
     const loginForm = document.getElementById('login-form');
-    loginForm.addEventListener('submit', (e) => {
+    const loginBtn = document.getElementById('btn-ingresar');
+    const loginError = document.getElementById('login-error');
+
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const u = document.getElementById('email').value.toLowerCase();
-        const p = document.getElementById('password').value;
         
-        if(u === VALID_USER && p === VALID_PASS) {
-            document.getElementById('login-error').classList.add('hidden');
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        // UI Feedback
+        loginBtn.innerText = "Verificando...";
+        loginBtn.disabled = true;
+        loginError.classList.add('hidden');
+
+        try {
+            // Autenticación Real contra Servidores de Google
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            console.log("Login exitoso:", user.email);
+            document.getElementById('user-display').innerText = user.email;
+            
             window.navigation.showScreen('dashboard-screen');
-        } else {
-            document.getElementById('login-error').classList.remove('hidden');
+        } catch (error) {
+            console.error("Error Login:", error.code, error.message);
+            loginError.innerText = "Error: Usuario o contraseña incorrectos.";
+            loginError.classList.remove('hidden');
+        } finally {
+            loginBtn.innerText = "INGRESAR";
+            loginBtn.disabled = false;
         }
     });
 
@@ -313,21 +337,17 @@
     });
 
 
-    // --- LÓGICA DE CONFIGURACIÓN DE PISCINAS (NUEVO) ---
+    // --- LÓGICA DE CONFIGURACIÓN DE PISCINAS ---
 
     // 1. Generar campos dinámicamente
     window.renderPoolInputs = (val) => {
         const container = document.getElementById('pool-areas-container');
         const count = parseInt(val);
         
-        // Si borran el número, limpiar
         if(!count || count < 0) {
             container.innerHTML = '';
             return;
         }
-
-        // Guardar valores actuales si existen para no perderlos al redibujar (opcional simple)
-        // Para simplicidad: Limpiamos y recreamos.
         container.innerHTML = '';
 
         for(let i = 1; i <= count; i++) {
@@ -341,8 +361,15 @@
         }
     };
 
-    // 2. Guardar en Firebase
+    // 2. Guardar en Firebase (Ahora sí funciona con Auth)
     window.saveConfig = async () => {
+        // Verificar si hay usuario logueado antes de intentar
+        if (!auth.currentUser) {
+            alert("Sesión expirada. Por favor ingresa nuevamente.");
+            window.navigation.logout();
+            return;
+        }
+
         const btn = document.querySelector('#config-screen button.primary-btn');
         const originalText = btn.innerText;
         
@@ -352,19 +379,16 @@
         // Recopilar áreas
         const inputs = document.querySelectorAll('.pool-area-input');
         let pools = [];
-        let allFilled = true;
 
         inputs.forEach(input => {
-            const val = parseFloat(input.value);
-            if(!val) allFilled = false;
             pools.push({
                 id: input.dataset.id,
-                area: val || 0
+                area: parseFloat(input.value) || 0
             });
         });
 
         if(!farmName || !poolCount || pools.length === 0) {
-            alert("Por favor completa el nombre de la granja y la cantidad de piscinas.");
+            alert("Por favor completa todos los datos.");
             return;
         }
 
@@ -372,11 +396,11 @@
         btn.disabled = true;
 
         try {
-            // Guardamos en la colección 'config', documento 'general'
             await setDoc(doc(db, "config", "general"), {
                 farmName: farmName,
                 poolCount: parseInt(poolCount),
                 pools: pools,
+                updatedBy: auth.currentUser.email, // Registro de auditoría
                 updatedAt: new Date()
             });
 
@@ -385,15 +409,22 @@
 
         } catch (error) {
             console.error("Error al guardar:", error);
-            alert("Error: " + error.message);
+            // Mostrar el error real si es permisos
+            if (error.code === 'permission-denied') {
+                alert("Error de Permisos: Tu usuario no está autorizado en las Reglas de Firebase.");
+            } else {
+                alert("Error: " + error.message);
+            }
         } finally {
             btn.innerText = originalText;
             btn.disabled = false;
         }
     };
 
-    // 3. Cargar datos existentes al entrar
+    // 3. Cargar datos existentes
     window.loadConfig = async () => {
+        if (!auth.currentUser) return; // Seguridad extra
+
         try {
             const docRef = doc(db, "config", "general");
             const docSnap = await getDoc(docRef);
@@ -403,16 +434,12 @@
                 document.getElementById('farm-name').value = data.farmName || '';
                 document.getElementById('pool-count').value = data.poolCount || '';
                 
-                // Regenerar inputs
                 renderPoolInputs(data.poolCount);
                 
-                // Llenar valores de hectáreas
                 const inputs = document.querySelectorAll('.pool-area-input');
                 if(data.pools && data.pools.length > 0) {
                     data.pools.forEach((pool, index) => {
-                        if(inputs[index]) {
-                            inputs[index].value = pool.area;
-                        }
+                        if(inputs[index]) inputs[index].value = pool.area;
                     });
                 }
             }
@@ -424,4 +451,3 @@
 </script>
 </body>
 </html>
-
