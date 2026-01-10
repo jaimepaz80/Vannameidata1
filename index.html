@@ -6,159 +6,32 @@
     <title>Vannamei Data - Gestión Acuícola</title>
     <style>
         /* --- ESTILOS (CSS) --- */
-        :root {
-            --primary-color: #006064; 
-            --secondary-color: #0097a7;
-            --bg-color: #f4f6f8;
-            --text-color: #333;
-            --white: #ffffff;
-            --error-color: #d32f2f;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: var(--text-color);
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 480px; 
-            background: var(--white);
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
+        :root { --primary-color: #006064; --secondary-color: #0097a7; --bg-color: #f4f6f8; --text-color: #333; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-color); }
+        .app-container { width: 100%; max-width: 480px; background: var(--white); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
-
         /* Login */
-        #login-screen {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 2rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-        }
-
+        #login-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 2rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; }
         h1, h2, h3 { text-align: center; margin-bottom: 1rem; }
-
         .input-group { position: relative; margin-bottom: 1.5rem; }
-        
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         input:focus { outline: 2px solid var(--secondary-color); border-color: transparent; }
-
-        /* Botones */
-        button.primary-btn {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        
-        button.primary-btn:active { transform: scale(0.98); }
+        button.primary-btn { width: 100%; padding: 14px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         button:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .toggle-password {
-            position: absolute;
-            right: 10px;
-            top: 38px; /* Ajustado para cuando hay label */
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: #666;
-        }
+        .toggle-password { position: absolute; right: 10px; top: 38px; cursor: pointer; background: none; border: none; color: #666; }
         #login-screen .toggle-password { top: 50%; transform: translateY(-50%); color: #ddd; }
-
         /* Headers */
-        .screen-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            margin-right: 1rem;
-            padding: 0 10px;
-        }
-
+        .screen-header { background-color: var(--primary-color); color: white; padding: 1rem; display: flex; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .back-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-right: 1rem; padding: 0 10px; }
         .content-area { padding: 1.5rem; flex: 1; overflow-y: auto; padding-bottom: 4rem; }
-
         /* Dashboard Grid */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .dash-btn {
-            background-color: var(--white);
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 1.5rem 1rem;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            color: var(--primary-color);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dash-btn:active { background-color: #e0f7fa; }
-
-        /* Estilos específicos Configuración */
-        .pool-input-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            background: #f9f9f9;
-            padding: 8px;
-            border-radius: 6px;
-        }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .dash-btn { background-color: var(--white); border: 1px solid #ddd; border-radius: 12px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: var(--primary-color); font-weight: 600; display: flex; align-items: center; justify-content: center; }
+        .pool-input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: #f9f9f9; padding: 8px; border-radius: 6px; }
         .pool-input-row label { margin: 0; font-weight: normal; }
         .pool-input-row input { width: 80px; text-align: center; }
-
         #login-error { color: #ffcdd2; text-align: center; margin-top: 10px; font-size: 0.9rem; }
-
     </style>
 </head>
 <body>
@@ -168,18 +41,15 @@
     <section id="login-screen">
         <h2>Vannamei Data</h2>
         <p style="text-align: center; opacity: 0.9; margin-top: -10px;">Gestión Productiva</p>
-        
         <form id="login-form">
             <div class="input-group">
                 <input type="email" id="email" placeholder="Usuario" required autocomplete="username" value="vannameidata@gmail.com">
             </div>
-            
             <div class="input-group">
                 <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
                 <button type="button" class="toggle-password" id="toggle-pwd-btn">👁️</button>
             </div>
-
-            <button type="submit" class="primary-btn" id="btn-ingresar">INGRESAR</button>
+            <button type="submit" class="primary-btn" id="btn-ingresar">INGRESAR SEGURO</button>
             <div id="login-error" class="hidden"></div>
         </form>
     </section>
@@ -190,10 +60,9 @@
             <h3>Panel de Control</h3>
         </div>
         <div class="content-area">
-            <p>Bienvenido, <span id="user-display">Administrador</span>.</p>
+            <p>Bienvenido, <span id="user-display" style="font-weight:bold; color:var(--primary-color);">Cargando...</span></p>
             <div class="dashboard-grid">
                 <button class="dash-btn" onclick="navigation.showScreen('config-screen'); loadConfig();">Configuración de Piscinas</button>
-                
                 <button class="dash-btn" onclick="navigation.goToGeneric('Registro de Alimentación')">Registro de Alimentación</button>
                 <button class="dash-btn" onclick="navigation.goToGeneric('Calidad de Agua')">Calidad de Agua</button>
                 <button class="dash-btn" onclick="navigation.goToGeneric('Biometrías')">Biometrías</button>
@@ -213,18 +82,12 @@
                     <label>Nombre de la Granja</label>
                     <input type="text" id="farm-name" placeholder="Ej: Santa Clara" required>
                 </div>
-
                 <div class="input-group">
                     <label>Cantidad de Piscinas</label>
                     <input type="number" id="pool-count" placeholder="0" min="1" max="50" oninput="renderPoolInputs(this.value)">
                 </div>
-
                 <div style="border-top: 1px solid #eee; margin: 20px 0;"></div>
-                <p style="font-size:0.9rem; color:#666;">Áreas por Piscina (Hectáreas):</p>
-
-                <div id="pool-areas-container">
-                    </div>
-
+                <div id="pool-areas-container"></div>
                 <button type="button" onclick="saveConfig()" class="primary-btn" style="margin-top: 20px;">GUARDAR</button>
             </form>
         </div>
@@ -236,21 +99,18 @@
             <h3 id="page-title">Título</h3>
         </div>
         <div class="content-area">
-            <p>Módulo: <span id="page-content-name" style="font-weight:bold;"></span></p>
-            <p><em>En construcción...</em></p>
+            <p>Módulo: <span id="page-content-name"></span> (En construcción)</p>
         </div>
     </section>
 
 </div>
 
 <script type="module">
-    // 1. IMPORTAR LIBRERÍAS DE FIREBASE (Autenticación + Base de Datos)
+    // Importamos AUTHENTICATION
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // 2. CONFIGURACIÓN DE TU PROYECTO
     const firebaseConfig = {
       apiKey: "AIzaSyBBgvzjBdgvSlHiIqyGL3abcG6fHFS-m6I",
       authDomain: "vannamei--data.firebaseapp.com",
@@ -261,13 +121,9 @@
       measurementId: "G-MN2YM6T1LE"
     };
 
-    // 3. INICIALIZAR FIREBASE
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getFirestore(app);
-    const auth = getAuth(app); // Autenticación inicializada
-
-    console.log("Sistema Vannamei Data iniciado con Autenticación Segura.");
+    const auth = getAuth(app); // INICIAMOS AUTH
 
     // --- NAVEGACIÓN ---
     window.navigation = {
@@ -276,178 +132,109 @@
             document.getElementById(screenId).classList.remove('hidden');
             window.scrollTo(0,0);
         },
-        goBack: () => {
-            window.navigation.showScreen('dashboard-screen');
-        },
+        goBack: () => window.navigation.showScreen('dashboard-screen'),
         goToGeneric: (title) => {
             document.getElementById('page-title').innerText = title;
             document.getElementById('page-content-name').innerText = title;
             window.navigation.showScreen('generic-page');
         },
         logout: async () => {
-            try {
-                await signOut(auth);
-                document.getElementById('password').value = "";
-                window.navigation.showScreen('login-screen');
-            } catch(e) {
-                console.error("Error al salir", e);
-            }
+            await signOut(auth);
+            document.getElementById('password').value = "";
+            window.navigation.showScreen('login-screen');
         }
     };
 
-    // --- LÓGICA DE LOGIN REAL CON FIREBASE ---
-    const loginForm = document.getElementById('login-form');
-    const loginBtn = document.getElementById('btn-ingresar');
-    const loginError = document.getElementById('login-error');
-
-    loginForm.addEventListener('submit', async (e) => {
+    // --- LOGIN REAL (ESTO ES LO QUE TE FALTA) ---
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        const pass = document.getElementById('password').value;
+        const btn = document.getElementById('btn-ingresar');
+        const err = document.getElementById('login-error');
         
-        // UI Feedback
-        loginBtn.innerText = "Verificando...";
-        loginBtn.disabled = true;
-        loginError.classList.add('hidden');
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
+        err.classList.add('hidden');
 
         try {
-            // Autenticación Real contra Servidores de Google
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            // AQUÍ OCURRE LA MAGIA: Nos conectamos a Firebase
+            const userCredential = await signInWithEmailAndPassword(auth, email, pass);
             
-            console.log("Login exitoso:", user.email);
-            document.getElementById('user-display').innerText = user.email;
-            
+            // Si pasa esta línea, Firebase te aceptó y te dio el permiso
+            document.getElementById('user-display').innerText = userCredential.user.email;
             window.navigation.showScreen('dashboard-screen');
         } catch (error) {
-            console.error("Error Login:", error.code, error.message);
-            loginError.innerText = "Error: Usuario o contraseña incorrectos.";
-            loginError.classList.remove('hidden');
+            console.error(error);
+            err.innerText = "Error: Usuario o Clave incorrectos en Firebase.";
+            err.classList.remove('hidden');
         } finally {
-            loginBtn.innerText = "INGRESAR";
-            loginBtn.disabled = false;
+            btn.innerText = "INGRESAR SEGURO";
+            btn.disabled = false;
         }
     });
 
-    // Botón Ojo Contraseña
-    document.getElementById('toggle-pwd-btn').addEventListener('click', () => {
-        const input = document.getElementById('password');
-        input.type = input.type === 'password' ? 'text' : 'password';
-    });
-
-
-    // --- LÓGICA DE CONFIGURACIÓN DE PISCINAS ---
-
-    // 1. Generar campos dinámicamente
+    // --- GUARDAR CONFIGURACIÓN ---
     window.renderPoolInputs = (val) => {
         const container = document.getElementById('pool-areas-container');
-        const count = parseInt(val);
-        
-        if(!count || count < 0) {
-            container.innerHTML = '';
-            return;
-        }
         container.innerHTML = '';
-
+        const count = parseInt(val);
+        if(!count || count < 0) return;
         for(let i = 1; i <= count; i++) {
-            const div = document.createElement('div');
-            div.className = 'pool-input-row';
-            div.innerHTML = `
-                <label>Piscina ${i}</label>
-                <input type="number" step="0.01" class="pool-area-input" data-id="${i}" placeholder="Has">
-            `;
-            container.appendChild(div);
+            container.innerHTML += `<div class="pool-input-row"><label>Piscina ${i}</label><input type="number" step="0.01" class="pool-area-input" data-id="${i}" placeholder="Has"></div>`;
         }
     };
 
-    // 2. Guardar en Firebase (Ahora sí funciona con Auth)
     window.saveConfig = async () => {
-        // Verificar si hay usuario logueado antes de intentar
         if (!auth.currentUser) {
-            alert("Sesión expirada. Por favor ingresa nuevamente.");
-            window.navigation.logout();
+            alert("No hay sesión activa. Por favor re-ingresa.");
             return;
         }
-
-        const btn = document.querySelector('#config-screen button.primary-btn');
-        const originalText = btn.innerText;
-        
         const farmName = document.getElementById('farm-name').value;
         const poolCount = document.getElementById('pool-count').value;
-        
-        // Recopilar áreas
         const inputs = document.querySelectorAll('.pool-area-input');
         let pools = [];
+        inputs.forEach(input => pools.push({ id: input.dataset.id, area: parseFloat(input.value) || 0 }));
 
-        inputs.forEach(input => {
-            pools.push({
-                id: input.dataset.id,
-                area: parseFloat(input.value) || 0
-            });
-        });
+        if(!farmName || !poolCount || pools.length === 0) { alert("Faltan datos"); return; }
 
-        if(!farmName || !poolCount || pools.length === 0) {
-            alert("Por favor completa todos los datos.");
-            return;
-        }
-
-        btn.innerText = "Guardando...";
-        btn.disabled = true;
+        const btn = document.querySelector('#config-screen button.primary-btn');
+        btn.innerText = "Guardando..."; btn.disabled = true;
 
         try {
             await setDoc(doc(db, "config", "general"), {
-                farmName: farmName,
-                poolCount: parseInt(poolCount),
-                pools: pools,
-                updatedBy: auth.currentUser.email, // Registro de auditoría
+                farmName, poolCount: parseInt(poolCount), pools,
+                updatedBy: auth.currentUser.email,
                 updatedAt: new Date()
             });
-
-            alert("¡Configuración guardada correctamente!");
+            alert("¡GUARDADO CON ÉXITO!"); // Si ves esto, funcionó
             window.navigation.goBack();
-
         } catch (error) {
-            console.error("Error al guardar:", error);
-            // Mostrar el error real si es permisos
-            if (error.code === 'permission-denied') {
-                alert("Error de Permisos: Tu usuario no está autorizado en las Reglas de Firebase.");
-            } else {
-                alert("Error: " + error.message);
-            }
+            alert("Error: " + error.message);
         } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
+            btn.innerText = "GUARDAR"; btn.disabled = false;
         }
     };
 
-    // 3. Cargar datos existentes
+    // --- CARGAR DATOS ---
     window.loadConfig = async () => {
-        if (!auth.currentUser) return; // Seguridad extra
-
+        if (!auth.currentUser) return;
         try {
-            const docRef = doc(db, "config", "general");
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data();
+            const snap = await getDoc(doc(db, "config", "general"));
+            if (snap.exists()) {
+                const data = snap.data();
                 document.getElementById('farm-name').value = data.farmName || '';
                 document.getElementById('pool-count').value = data.poolCount || '';
-                
                 renderPoolInputs(data.poolCount);
-                
                 const inputs = document.querySelectorAll('.pool-area-input');
-                if(data.pools && data.pools.length > 0) {
-                    data.pools.forEach((pool, index) => {
-                        if(inputs[index]) inputs[index].value = pool.area;
-                    });
-                }
+                data.pools.forEach((p, i) => { if(inputs[i]) inputs[i].value = p.area; });
             }
-        } catch (error) {
-            console.log("Aún no hay configuración guardada o error de red.");
-        }
+        } catch (e) { console.log("Sin datos previos"); }
     };
 
+    document.getElementById('toggle-pwd-btn').addEventListener('click', () => {
+        const i = document.getElementById('password'); i.type = i.type === 'password' ? 'text' : 'password';
+    });
 </script>
 </body>
 </html>
