@@ -109,7 +109,7 @@
                 <button class="dash-btn" onclick="navigation.showScreen('water-screen'); loadPoolsForSelect('water-pool-select');">Calidad de Agua</button>
                 <button class="dash-btn" onclick="navigation.showScreen('bio-screen'); loadPoolsForSelect('bio-pool-select');">Biometrías</button>
                 
-                <button class="dash-btn" onclick="navigation.goToGeneric('Estatus de Piscinas')">Estatus de Piscinas</button>
+                <button class="dash-btn" onclick="navigation.showScreen('status-screen'); loadPoolsForSelect('status-pool-select');">Estatus de Piscinas</button>
             </div>
         </div>
     </section>
@@ -164,7 +164,6 @@
                         <input type="number" id="water-o2" placeholder="Ej: 4.5" step="0.01" required style="border: 2px solid #0288d1;">
                     </div>
                     <div class="input-group"><label>Disco Secchi (cm)</label><input type="number" id="water-secchi" placeholder="Ej: 35" step="1"></div>
-                    
                     <div class="input-group"><label>Temperatura (°C)</label><input type="number" id="water-temp" placeholder="Ej: 27.5" step="0.1"></div>
                     <div class="input-group"><label>pH</label><input type="number" id="water-ph" placeholder="Ej: 7.8" step="0.01"></div>
                     <div class="input-group"><label>Salinidad (ppt)</label><input type="number" id="water-sal" placeholder="Ej: 15" step="0.1"></div>
@@ -191,17 +190,14 @@
             <h3>Biometrías</h3>
         </div>
         <div class="content-area">
-            
             <div class="input-group">
                 <label>Piscina Activa</label>
                 <select id="bio-pool-select" onchange="loadBioData(this.value)">
                     <option value="">Seleccione Piscina...</option>
                 </select>
             </div>
-
             <form id="bio-form" style="background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                 <h4 style="margin-top:0; color:var(--primary-color);">Añadir Registro</h4>
-                
                 <div class="input-group">
                     <label>Tipo de Registro</label>
                     <select id="bio-type" required>
@@ -210,47 +206,59 @@
                         <option value="Cosecha">Cosecha (Fin Ciclo)</option>
                     </select>
                 </div>
-
-                <div class="input-group">
-                    <label>Fecha</label>
-                    <input type="date" id="bio-date" required>
-                </div>
-
+                <div class="input-group"><label>Fecha</label><input type="date" id="bio-date" required></div>
                 <div class="dashboard-grid">
-                    <div class="input-group">
-                        <label>Camarones Vivos (Und)</label>
-                        <input type="number" id="bio-count" placeholder="Cant." required>
-                    </div>
-                    <div class="input-group">
-                        <label>Peso Promedio (g)</label>
-                        <input type="number" id="bio-weight" placeholder="Gramos" step="0.01" required>
-                    </div>
+                    <div class="input-group"><label>Camarones Vivos (Und)</label><input type="number" id="bio-count" placeholder="Cant." required></div>
+                    <div class="input-group"><label>Peso Promedio (g)</label><input type="number" id="bio-weight" placeholder="Gramos" step="0.01" required></div>
                 </div>
-
                 <button type="button" onclick="saveBiometry()" class="primary-btn">AÑADIR REGISTRO</button>
             </form>
-
             <h4 style="margin-top:30px; margin-bottom:5px;">Gráfico de Crecimiento</h4>
-            <div class="chart-container">
-                <canvas id="growthChart"></canvas>
-            </div>
-
+            <div class="chart-container"><canvas id="growthChart"></canvas></div>
             <h4 style="margin-top:30px; margin-bottom:5px;">Historial del Ciclo</h4>
             <table class="bio-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Peso(g)</th>
-                        <th>Bio(Kg)</th>
-                        <th>Surv(%)</th>
-                    </tr>
-                </thead>
-                <tbody id="bio-table-body">
-                    <tr><td colspan="5" style="text-align:center;">Seleccione una piscina</td></tr>
-                </tbody>
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Peso(g)</th><th>Bio(Kg)</th><th>Surv(%)</th></tr></thead>
+                <tbody id="bio-table-body"><tr><td colspan="5" style="text-align:center;">Seleccione una piscina</td></tr></tbody>
             </table>
+        </div>
+    </section>
 
+    <section id="status-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="navigation.goBack()">&#8592;</button>
+            <h3>Estatus de Piscina</h3>
+        </div>
+        <div class="content-area">
+            <form id="status-form">
+                <div class="input-group">
+                    <label>Fecha de Registro</label>
+                    <input type="date" id="status-date" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Seleccionar Piscina</label>
+                    <select id="status-pool-select" required>
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Nuevo Estado</label>
+                    <select id="status-type" required style="padding: 15px; font-weight: bold; color: var(--primary-color);">
+                        <option value="Cosecha">Cosecha</option>
+                        <option value="Seca">Seca</option>
+                        <option value="Preparado">Preparado</option>
+                        <option value="Llenado">Llenado</option>
+                        <option value="Siembra">Siembra</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="saveStatus()" class="primary-btn" style="margin-top: 20px;">GUARDAR ESTATUS</button>
+            </form>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 0.9em; text-align: center;">
+                Al guardar, se registrará el evento en el historial de la piscina.
+            </p>
         </div>
     </section>
 
@@ -300,13 +308,14 @@
 
     // Variables Globales
     const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    let growthChartInstance = null; // Para guardar la instancia del gráfico
+    let growthChartInstance = null;
 
     // Fechas por defecto
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('feed-date').value = today;
     document.getElementById('water-date').value = today;
     document.getElementById('bio-date').value = today;
+    document.getElementById('status-date').value = today; // Nueva fecha defecto
     document.getElementById('water-time').value = new Date().toTimeString().substring(0,5);
 
     // --- NAVEGACIÓN ---
@@ -352,7 +361,6 @@
     // --- HELPERS ---
     window.loadPoolsForSelect = async (selectId) => {
         const select = document.getElementById(selectId);
-        // No recargar si ya tiene opciones (excepto la de carga)
         if(select.options.length > 2) return; 
         
         select.innerHTML = '<option value="">Cargando...</option>';
@@ -421,7 +429,7 @@
             time: document.getElementById('water-time').value,
             poolId: document.getElementById('water-pool-select').value,
             oxygen: parseFloat(document.getElementById('water-o2').value) || 0,
-            secchi: parseFloat(document.getElementById('water-secchi').value) || 0, // NUEVO
+            secchi: parseFloat(document.getElementById('water-secchi').value) || 0,
             temp: parseFloat(document.getElementById('water-temp').value) || 0,
             ph: parseFloat(document.getElementById('water-ph').value) || 0,
             salinity: parseFloat(document.getElementById('water-sal').value) || 0,
@@ -435,9 +443,7 @@
             user: auth.currentUser.email,
             timestamp: new Date()
         };
-
         if(!data.date || !data.poolId || !document.getElementById('water-o2').value) return alert("Faltan datos obligatorios (Oxígeno)");
-
         try {
             await addDoc(collection(db, "water_quality"), data);
             if (data.oxygen <= 3.0) {
@@ -447,9 +453,7 @@
         } catch (e) { alert("Error: " + e.message); }
     };
 
-    // --- BIOMETRÍAS Y GRÁFICOS (Lógica Completa) ---
-    
-    // Guardar Biometría
+    // --- BIOMETRÍAS ---
     window.saveBiometry = async () => {
         if (!auth.currentUser) return;
         const poolId = document.getElementById('bio-pool-select').value;
@@ -457,120 +461,99 @@
         const date = document.getElementById('bio-date').value;
         const count = parseFloat(document.getElementById('bio-count').value);
         const weight = parseFloat(document.getElementById('bio-weight').value);
-
         if(!poolId || !date || !count || !weight) return alert("Complete todos los campos");
-
         try {
-            await addDoc(collection(db, "biometrics"), {
-                poolId, type, date, count, weight,
-                timestamp: new Date(),
-                user: auth.currentUser.email
-            });
-            alert("Registro añadido");
-            loadBioData(poolId); // Recargar tabla y gráfico
+            await addDoc(collection(db, "biometrics"), { poolId, type, date, count, weight, timestamp: new Date(), user: auth.currentUser.email });
+            alert("Registro añadido"); loadBioData(poolId);
         } catch(e) { alert("Error: " + e.message); }
     };
 
-    // Cargar Datos, Calcular Supervivencia y Dibujar Gráfico
     window.loadBioData = async (poolId) => {
         if(!poolId) return;
         const tbody = document.getElementById('bio-table-body');
         tbody.innerHTML = '<tr><td colspan="5">Cargando datos...</td></tr>';
-
-        // 1. Obtener todos los registros de esta piscina ordenados por fecha
         const q = query(collection(db, "biometrics"), where("poolId", "==", poolId), orderBy("date", "asc"));
         const querySnapshot = await getDocs(q);
-        
         let records = [];
         querySnapshot.forEach(doc => records.push(doc.data()));
 
-        // 2. Procesar lógica de Ciclos (Encontrar la última "Siembra")
         let currentCycleStart = null;
         let cycleRecords = [];
-
-        // Buscamos la siembra más reciente para definir el ciclo actual
-        // Recorremos al revés para encontrar la última siembra
         for (let i = records.length - 1; i >= 0; i--) {
             if (records[i].type === 'Siembra') {
-                // Filtramos solo los registros desde esta fecha en adelante
                 cycleRecords = records.filter(r => r.date >= records[i].date);
                 currentCycleStart = records[i];
                 break;
             }
         }
-
-        // Si no hay siembra, mostramos todo lo que haya sin cálculos de supervivencia precisos
         if (!currentCycleStart && records.length > 0) cycleRecords = records;
 
-        // 3. Renderizar Tabla y preparar datos Gráfico
         tbody.innerHTML = '';
-        let labels = []; // Fechas para X
-        let dataPoints = []; // Pesos para Y
-
+        let labels = [];
+        let dataPoints = [];
         if(cycleRecords.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sin registros para esta piscina</td></tr>';
         } else {
             cycleRecords.forEach(rec => {
-                // Cálculos
                 const biomass = ((rec.count * rec.weight) / 1000).toFixed(2);
                 let survival = "--";
-                
                 if (currentCycleStart) {
                     const survPct = (rec.count / currentCycleStart.count) * 100;
                     survival = survPct.toFixed(1) + "%";
                 }
-
-                // Fila Tabla
-                const row = `<tr>
-                    <td>${rec.date.substring(5)}</td>
-                    <td>${rec.type}</td>
-                    <td>${rec.weight}</td>
-                    <td>${biomass}</td>
-                    <td>${survival}</td>
-                </tr>`;
+                const row = `<tr><td>${rec.date.substring(5)}</td><td>${rec.type}</td><td>${rec.weight}</td><td>${biomass}</td><td>${survival}</td></tr>`;
                 tbody.innerHTML += row;
-
-                // Datos Gráfico
-                labels.push(rec.date.substring(5)); // Mes-Día
+                labels.push(rec.date.substring(5));
                 dataPoints.push(rec.weight);
             });
         }
-
-        // 4. Dibujar Gráfico
         renderChart(labels, dataPoints);
     };
 
-    // Función para renderizar Chart.js
     function renderChart(labels, data) {
         const ctx = document.getElementById('growthChart').getContext('2d');
-        
-        // Destruir anterior si existe
         if (growthChartInstance) growthChartInstance.destroy();
-
         growthChartInstance = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Peso Promedio (g)',
-                    data: data,
-                    borderColor: '#006064',
-                    backgroundColor: 'rgba(0, 96, 100, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3 // Curva suave
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: {display:true, text:'Gramos'} }
-                }
-            }
+            data: { labels: labels, datasets: [{ label: 'Peso Promedio (g)', data: data, borderColor: '#006064', backgroundColor: 'rgba(0, 96, 100, 0.1)', borderWidth: 2, fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: {display:true, text:'Gramos'} } } }
         });
     }
 
+    // --- ESTATUS DE PISCINAS (NUEVO) ---
+    window.saveStatus = async () => {
+        if (!auth.currentUser) return alert("Sesión expirada");
+
+        const date = document.getElementById('status-date').value;
+        const poolId = document.getElementById('status-pool-select').value;
+        const status = document.getElementById('status-type').value;
+
+        if (!date || !poolId || !status) {
+            return alert("Por favor complete todos los campos (Fecha, Piscina y Estado).");
+        }
+
+        const btn = document.querySelector('#status-screen button.primary-btn');
+        btn.innerText = "Guardando..."; btn.disabled = true;
+
+        try {
+            // Guardamos en la colección 'pool_status'
+            await addDoc(collection(db, "pool_status"), {
+                date: date,
+                poolId: poolId,
+                status: status,
+                user: auth.currentUser.email,
+                timestamp: new Date()
+            });
+
+            alert(`Estado de Piscina ${poolId} actualizado a: ${status}`);
+            window.navigation.goBack();
+        } catch (error) {
+            console.error(error);
+            alert("Error al guardar: " + error.message);
+        } finally {
+            btn.innerText = "GUARDAR ESTATUS"; btn.disabled = false;
+        }
+    };
 
     // --- ALARMA ---
     let unsubscribeAlarm = null;
@@ -613,4 +596,3 @@
 </script>
 </body>
 </html>
-
