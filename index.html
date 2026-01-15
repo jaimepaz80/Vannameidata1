@@ -1,3 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vannamei Data - Gestión Integral</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        :root { --primary: #006064; --secondary: #0097a7; --bg: #f4f6f8; --text: #333; --white: #ffffff; --accent: #ff6f00; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); font-size: 14px; }
+        
+        .app-container { max-width: 480px; margin: 0 auto; background: var(--white); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+
+        /* HEADER & NAV */
+        .screen-header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .back-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-right: 15px; }
+        .content-area { padding: 15px; flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+        /* INPUTS & FORMS */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--primary); font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        input:focus, select:focus { outline: 2px solid var(--secondary); border-color: transparent; }
+        
+        /* BOTONES */
+        button.primary-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .dash-btn { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px; text-align: center; color: var(--primary); font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+        .dash-btn:active { transform: scale(0.98); background: #e0f7fa; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* --- REPORTES --- */
+        .report-tabs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid #eee; }
+        .tab-btn { white-space: nowrap; padding: 8px 12px; border: 1px solid var(--primary); border-radius: 20px; background: none; color: var(--primary); font-size: 0.85rem; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
+        .filter-box { background: #f5f5f5; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
+        .data-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        
+        /* TABLAS DE REPORTE */
+        .rep-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 5px; }
+        .rep-table th { background: #eee; text-align: left; padding: 8px; font-weight: bold; color: #333; border-bottom: 2px solid #ccc; }
+        .rep-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; }
+        .rep-table tr:nth-child(even) { background-color: #fcfcfc; }
+
+        /* Login Styles */
+        #login-screen { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; justify-content: center; }
+        .login-box { text-align: center; }
+        .toggle-pwd { position: absolute; right: 10px; top: 35px; background: none; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <section id="login-screen" style="display: flex;">
+        <div class="login-box" style="width: 80%;">
+            <h2>Vannamei Data</h2>
+            <p>Sistema de Gestión Acuícola</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Usuario" value="vannameidata@gmail.com">
+                </div>
+                <div class="input-group" style="position:relative;">
+                    <input type="password" id="password" placeholder="Contraseña">
+                    <button type="button" class="toggle-pwd" onclick="togglePass()">👁️</button>
+                </div>
+                <button type="submit" class="primary-btn" id="btn-login">INGRESAR</button>
+                <div id="login-error" style="color: #ffcdd2; margin-top: 10px; display: none;">Error de credenciales</div>
+            </form>
+        </div>
+    </section>
+
+    <section id="dashboard-screen" class="hidden">
+        <div class="screen-header">
+            <button class="back-btn" onclick="logout()">&#8592;</button>
+            <h3>Panel de Control</h3>
+        </div>
+        <div class="content-area">
+            <p>Bienvenido, <b id="user-display">Usuario</b></p>
+            <div class="dashboard-grid">
+                <button class="dash-btn" onclick="nav('config-screen'); loadConfig();">Configuración</button>
+                <button class="dash-btn" onclick="nav('feeding-screen'); loadPools('feed-pool');">Alimentación</button>
+                <button class="dash-btn" onclick="nav('water-screen'); loadPools('water-pool');">Calidad Agua</button>
+                <button class="dash-btn" onclick="nav('bio-screen'); loadPools('bio-pool');">Biometrías</button>
+                <button class="dash-btn" onclick="nav('inputs-screen'); loadPools('input-pool');">Insumos</button>
+                <button class="dash-btn" onclick="nav('status-screen'); loadPools('status-pool');">Estatus</button>
+                <button class="dash-btn" style="grid-column: span 2; background:#e0f7fa;" onclick="nav('reports-screen'); initReports();">📊 CENTRO DE REPORTES</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="config-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Configuración</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Granja</label><input id="cfg-name" placeholder="Nombre"></div>
+            <div class="input-group"><label>N° Piscinas</label><input type="number" id="cfg-count" oninput="renderPools(this.value)"></div>
+            <div id="cfg-pools"></div>
+            <button class="primary-btn" onclick="saveConfig()">GUARDAR</button>
+        </div>
+    </section>
+
+    <section id="feeding-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Alimentación</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Fecha</label><input type="date" id="feed-date"></div>
+            <div class="input-group"><label>Piscina</label><select id="feed-pool"></select></div>
+            <div class="input-group"><label>Kilos Recargados</label><input type="number" id="feed-rec" placeholder="0.0"></div>
+            <div class="input-group"><label>Kilos Consumidos</label><input type="number" id="feed-cons" placeholder="0.0"></div>
+            <button class="primary-btn" onclick="saveFeed()">GUARDAR</button>
+        </div>
+    </section>
+
+    <section id="water-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Calidad de Agua</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Fecha</label><input type="date" id="water-date"></div>
+            <div class="input-group"><label>Hora</label><input type="time" id="water-time"></div>
+            <div class="input-group"><label>Piscina</label><select id="water-pool"></select></div>
+            <div class="filter-box">
+                <label>Físicos</label>
+                <input type="number" id="w-o2" placeholder="Oxígeno (mg/L)" style="margin-bottom:5px;">
+                <input type="number" id="w-ph" placeholder="pH" style="margin-bottom:5px;">
+                <input type="number" id="w-temp" placeholder="Temp (°C)" style="margin-bottom:5px;">
+                <input type="number" id="w-sal" placeholder="Salinidad (ppt)">
+                <input type="number" id="w-secchi" placeholder="Disco Secchi (cm)" style="margin-top:5px;">
+            </div>
+            <div class="filter-box">
+                <label>Químicos</label>
+                <input type="number" id="w-tan" placeholder="TAN (Amonio)" style="margin-bottom:5px;">
+                <input type="number" id="w-no2" placeholder="Nitritos">
+            </div>
+            <button class="primary-btn" onclick="saveWater()">GUARDAR</button>
+        </div>
+    </section>
+
+    <section id="bio-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Biometrías</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Piscina</label><select id="bio-pool"></select></div>
+            <div class="input-group"><label>Tipo</label><select id="bio-type"><option>Biometría</option><option>Siembra</option><option>Cosecha</option></select></div>
+            <div class="input-group"><label>Fecha</label><input type="date" id="bio-date"></div>
+            <div class="input-group"><label>Camarones Vivos</label><input type="number" id="bio-count"></div>
+            <div class="input-group"><label>Peso Promedio (g)</label><input type="number" id="bio-weight"></div>
+            <button class="primary-btn" onclick="saveBio()">GUARDAR</button>
+        </div>
+    </section>
+
+    <section id="status-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Estatus</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Fecha</label><input type="date" id="st-date"></div>
+            <div class="input-group"><label>Piscina</label><select id="status-pool"></select></div>
+            <div class="input-group"><label>Nuevo Estado</label>
+                <select id="st-val">
+                    <option>Siembra</option><option>Preparado</option><option>Llenado</option><option>Seca</option><option>Cosecha</option>
+                </select>
+            </div>
+            <button class="primary-btn" onclick="saveStatus()">ACTUALIZAR</button>
+        </div>
+    </section>
+
+    <section id="inputs-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Insumos</h3></div>
+        <div class="content-area">
+            <div class="input-group"><label>Fecha</label><input type="date" id="in-date"></div>
+            <div class="input-group"><label>Piscina</label><select id="input-pool"></select></div>
+            <div class="input-group"><label>Producto</label><input id="in-prod" placeholder="Ej: Cal, Melaza"></div>
+            <div class="input-group"><label>Cantidad</label><input type="number" id="in-qty"></div>
+            <div class="input-group"><label>Unidad</label><select id="in-unit"><option>Kg</option><option>Lt</option><option>Sacos</option></select></div>
+            <button class="primary-btn" onclick="saveInput()">REGISTRAR</button>
+        </div>
+    </section>
+
+    <section id="reports-screen" class="hidden">
+        <div class="screen-header"><button class="back-btn" onclick="goBack()">&#8592;</button><h3>Reportes</h3></div>
+        <div class="content-area">
+            
+            <div class="report-tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-alim')">Alimentación</button>
+                <button class="tab-btn" onclick="switchTab('tab-bio')">Biometrías</button>
+                <button class="tab-btn" onclick="switchTab('tab-estatus')">Estatus</button>
+                <button class="tab-btn" onclick="switchTab('tab-insumos')">Insumos</button>
+            </div>
+
+            <div id="tab-alim" class="report-view">
+                <div class="filter-box">
+                    <label>Filtros:</label>
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="date" id="alim-start">
+                        <input type="date" id="alim-end">
+                    </div>
+                    <select id="alim-pool-filter" onchange="runAlimReport()"><option value="all">Todas las Piscinas</option></select>
+                    <button class="primary-btn" onclick="runAlimReport()" style="padding:8px;">Consultar</button>
+                </div>
+                <div class="data-card">
+                    <h4>Registro de Alimentación</h4>
+                    <table class="rep-table">
+                        <thead><tr><th>Fecha</th><th>Piscina</th><th>Recarga</th><th>Consumo</th></tr></thead>
+                        <tbody id="alim-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-bio" class="report-view hidden">
+                <div class="filter-box">
+                    <button class="primary-btn" onclick="runBioReport()" style="padding:8px;">Actualizar Datos</button>
+                </div>
+                <div class="data-card">
+                    <h4>Estado Actual de Población</h4>
+                    <table class="rep-table">
+                        <thead><tr><th>Piscina</th><th>Población</th><th>Peso (g)</th><th>Biomasa (Kg)</th></tr></thead>
+                        <tbody id="bio-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-estatus" class="report-view hidden">
+                <div class="data-card">
+                    <h4>Estatus por Piscina</h4>
+                    <button class="primary-btn" onclick="runStatusReport()" style="padding:8px; margin-bottom:10px;">Actualizar</button>
+                    <table class="rep-table">
+                        <thead><tr><th>Piscina</th><th>Estado Actual</th><th>Fecha Cambio</th></tr></thead>
+                        <tbody id="estatus-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-insumos" class="report-view hidden">
+                <div class="filter-box">
+                    <label>Filtros:</label>
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="date" id="ins-start">
+                        <input type="date" id="ins-end">
+                    </div>
+                    <select id="ins-pool-filter"><option value="all">Todas las Piscinas</option></select>
+                    <button class="primary-btn" onclick="runInputReport()" style="padding:8px;">Consultar</button>
+                </div>
+                <div class="data-card">
+                    <h4>Insumos Aplicados</h4>
+                    <table class="rep-table">
+                        <thead><tr><th>Fecha</th><th>Piscina</th><th>Producto</th><th>Cant.</th></tr></thead>
+                        <tbody id="ins-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -275,3 +531,5 @@
     };
 
 </script>
+</body>
+</html>
